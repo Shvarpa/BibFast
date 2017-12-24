@@ -73,3 +73,15 @@ class Firebase(object):
                 else:
                     break
         return key
+
+    def print_pyrebase(self,data):
+        if isinstance(data,pyrebase.pyrebase.Database):
+            data=data.get()
+        if isinstance(data, pyrebase.pyrebase.PyreResponse):
+            data = data.each()
+            for k in data:
+                print("{} , {}".format(k.key(), k.val()))
+                return
+        if isinstance(data, dict):
+            for k in data:
+                print("{} , {}".format(k, data[k]))
