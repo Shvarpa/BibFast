@@ -1,3 +1,6 @@
+import json
+
+
 class Projects(object):
     fields = {'name': None,
               'status': ['active', 'archived', 'projected']
@@ -27,10 +30,16 @@ class Projects(object):
 
 class Citation(object):
     fields = {
-        "projects": {
-            'project_id': 'citation_status',
-        },
+        "status": ['active', 'inactive'],
         "type": ['book', 'chapter', 'magazine', 'newspaper', 'journal', 'website'],
+        "get pub type": {
+            'book': 'pubnonperiodical',
+            'chapter': 'pubnonperiodical',
+            'magazine': 'pubmagazine',
+            'newspaper': 'pubnewspaper',
+            'journal': 'pubjournal',
+            'website': 'pubonline',
+        },
         "pubtype": {
             'pubnonperiodical': {
                 'title': 'Book title',
@@ -87,13 +96,66 @@ class Citation(object):
                 'monthaccessed': 'Month Web page was accessed',
                 'yearaccessed': 'Year Web page was accessed',
             },
-            "style": ['mla7', 'chicagob'],
-            "contributors": {
-                'function': ['auther', 'editor', 'compiler', 'translator'],
-                'first': '',
-                'middle': '',
-                'last': '',
-            },
-            "publisher": '',
         },
-    },
+        "style": ['mla7', 'chicagob'],
+        "contributors": {
+            'function': ['author', 'editor', 'compiler', 'translator'],
+            'name': ['first', 'middle', 'last'],
+        },
+    }
+
+    def __init__(self, project_id):
+        self.data = {}
+        self.data['projects'] = (project_id, 'active')
+
+    def set_type(self, type):
+        if not type in Citation.fields['get pub type']:
+            return "bad type"
+        self.data['type'] = type
+        pub_type = Citation.fields['get pub type'][type]
+        if not 'data' in self.data:
+            self.data['data'] = {}
+        self.data['data']['pubdata'] = {key: '' for key, _ in Citation.fields['pubtype'][pub_type].items()}
+
+    @staticmethod
+    def create_contributor(function, name):
+        if function not in Citation.fields['contributors']['function']:
+            return "bad contributor type"
+        if isinstance(name, str):
+            name = name.split(' ')
+        elif not isinstance(name, tuple) or isinstance(name, list):
+            return "bad name"
+        name_size = name.__len__()
+        if name_size < 1:
+            return 'bad name'
+        contributor = {}
+        contributor['function'] = function
+        contributor['first'] = name[0]
+        if name_size == 2:
+            contributor['last'] = name[1]
+        elif name_size >= 3:
+            contributor['middle'] = name[1]
+            contributor['last'] = name[2]
+        return contributor
+
+    def add_contributor(self, function, name):
+        contributor = Citation.create_contributor(function, name)
+        if not isinstance(contributor, dict):
+            return contributor
+        if 'data' not in self.data:
+            self.data['data'] = {}
+        if 'contributors' not in self.data['data']:
+            self.data['data']['contributors'] = []
+        self.data['data']['contributors'].append(contributor)
+
+    def remove_contributor(self,function):
+        if not 'data' in self.data:
+            return 'no contributers'
+        if not 'contributors' in self.data['data']:
+            return 'no contributers'
+        for c in self.data['data']['contributors']:
+            if c['function']==function:
+                self.data['data']['contributors'].remove(c)
+                break
+        return 'deleted contributor'
+

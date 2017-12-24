@@ -1,6 +1,7 @@
 import click
 from common_classes import Projects
 from firebase import Firebase
+import pyrebase
 
 pass_Firebase = click.make_pass_decorator(Firebase, ensure=True)
 
@@ -55,22 +56,18 @@ def project_update(Firebase, key, name, status):
     click.echo('project #{} updated'.format(key), err=True)
 
 
-#########################################################################################
-
-
 @cli.command()
 @click.pass_obj
 def print_projects(Firebase):
-    print('projects:')
-    for n in Firebase.db.child("project").get(Firebase.authkey).each():
-        print(n.key())
+    Firebase.print_pyrebase(Firebase.get("projects"))
 
+####################################################################
 
 @cli.command()
 @click.pass_obj
-@click.argument('citation_id')
 @click.argument(Firebase, 'project_name')
-def create_citation(citation_id, project_name):
+def create_citation(project_name):
+    key=Firebase.generate_possible_key("citations")
     data = {}
     for k in ["project", "status", "type", "auther", "year", "publisher"]:
         if k == "project":
