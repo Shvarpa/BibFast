@@ -1,5 +1,5 @@
 import click
-from db_classes import Project, Citation
+from common_classes import Projects
 from firebase import Firebase
 
 pass_Firebase = click.make_pass_decorator(Firebase, ensure=True)
@@ -14,44 +14,48 @@ def cli(Firebase):
 
 @cli.command()
 @click.pass_obj
-@click.argument('name',type=str)
+@click.argument('name', type=str)
 def create_project(Firebase, name):
     """
     recieve name and add project
     """
     key = Firebase.generate_possible_key("project")
-    Firebase.set(("project", key), {"name": name, "status": "active"})
+    Firebase.set(("project", key), Projects(name).data)
     click.echo('project added')
 
 
 @cli.command()
 @click.pass_obj
-@click.argument('key',type=int)
+@click.argument('key', type=int)
 def delete_project(Firebase, key):
-    if Firebase.find("projects",key)==None:
-        click.echo('Error project dont exist',err=True)
+    if Firebase.find("projects", key) == None:
+        click.echo('Error project dont exist', err=True)
+        return 'Error - project doesnt exist'
     else:
-        Firebase.remove(("projects",key))
-        click.echo('project #{} removed'.format(key),err=True)
+        Firebase.remove(("projects", key))
+        click.echo('project #{} removed'.format(key), err=True)
 
-#########################################################################################
 
 @cli.command()
 @click.pass_obj
-@click.argument('key',type=int)
-@click.argument('status',type=str)
-def project_status_set(Firebase, key, status):
-    if Firebase.find("projects", key) == None:
+@click.argument('key', type=int)
+@click.option('--name', default=None, type=str)
+@click.option('--status', default=None, type=str)
+def project_update(Firebase, key, name, status):
+    data = Firebase.find("projects", key)
+    if data == None:
+        click.echo('Error project dont exist', err=True)
+        return 'Error - project doesnt exist'
+    current_project=Projects.fromdict(data)
+    if name!=None:
+        current_project.set_name(name)
+    if status!=None:
+        current_project.set_status(status)
+    Firebase.update(('projects',key),current_project.data)
+    click.echo('project #{} updated'.format(key), err=True)
 
-    if_exist = False
-    for n in Firebase.db.child("project").get(Firebase.authkey).each():
-        if key == n.key():
-            if_exist = True
-            Firebase.db.child("project").child(key).update({'status': status}, Firebase.authkey)
-            print('status updated')
 
-    if not if_exist:
-        print('Error project dont exist')
+#########################################################################################
 
 
 @cli.command()
