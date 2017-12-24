@@ -49,11 +49,14 @@ class Firebase(object):
         x = self.reach(path)
         x.remove(self.authkey)
 
-    def find(self, path, value, ord='key'):
+    def find(self, path, value):
         x = self.reach(path)
-        ord_table = {'key': x.order_by_key, 'val': x.order_by_value()}
-        result = ord_table[ord]().equal_to(value) if ord in ord_table else x.order_by_child(ord)
-        result = result.get(self.authkey)
+        if not isinstance(value,str):
+            try:
+                value=str(value)
+            except:
+                return 'bad value'
+        result = x.order_by_key().equal_to(value).get(self.authkey)
         try:
             result=result.val()
         except IndexError:
