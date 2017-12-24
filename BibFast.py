@@ -28,25 +28,26 @@ def create_project(Firebase, name):
 @click.pass_obj
 @click.argument('key',type=int)
 def delete_project(Firebase, key):
-    if Firebase.find("projects",key).val()==None:
+    if Firebase.find("projects",key)==None:
         click.echo('Error project dont exist',err=True)
     else:
         Firebase.remove(("projects",key))
         click.echo('project #{} removed'.format(key),err=True)
 
-
+#########################################################################################
 
 @cli.command()
 @click.pass_obj
-@click.argument('name')
-@click.argument('status')
-def project_status_set(Firebase, name, status):
-    if_exist = False
+@click.argument('key',type=int)
+@click.argument('status',type=str)
+def project_status_set(Firebase, key, status):
+    if Firebase.find("projects", key) == None:
 
+    if_exist = False
     for n in Firebase.db.child("project").get(Firebase.authkey).each():
-        if name == n.key():
+        if key == n.key():
             if_exist = True
-            Firebase.db.child("project").child(name).update({'status': status}, Firebase.authkey)
+            Firebase.db.child("project").child(key).update({'status': status}, Firebase.authkey)
             print('status updated')
 
     if not if_exist:

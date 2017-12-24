@@ -39,7 +39,7 @@ class Firebase(object):
 
     def get(self, path):
         x = self.reach(path)
-        return x.get(self.authkey).each()
+        return x.get(self.authkey)
 
     def set(self, path, data):
         x = self.reach(path)
@@ -53,7 +53,12 @@ class Firebase(object):
         x = self.reach(path)
         ord_table = {'key': x.order_by_key, 'val': x.order_by_value()}
         result = ord_table[ord]().equal_to(value) if ord in ord_table else x.order_by_child(ord)
-        return result.get(self.authkey).each()
+        result = result.get(self.authkey)
+        try:
+            result=result.val()
+        except IndexError:
+            result=None
+        return result
 
     def generate_possible_key(self, path):
         data = self.get(path).each()
