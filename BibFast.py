@@ -80,6 +80,9 @@ def print_projects(Firebase):
 @click.pass_obj
 @click.argument('project_id',type=str)
 def create_citation(Firebase, project_id):
+    if Firebase.find("projects", project_id) == None:
+        click.echo("Error - project #{} does'nt exist".format(project_id), err=not Firebase.verbose)
+        return
     citation_id = Firebase.generate_possible_key("citations")
     citation = Citation(project_id)
     Firebase.set(['citations', citation_id], citation.data)
@@ -148,7 +151,7 @@ def citation_set_type(Firebase, citation_id, type):
         click.echo('could not set publication type ({})'.format(status), err=not Firebase.verbose)
         return
     Firebase.set(("citations", citation_id), citation.data)
-    click.echo('removed contributor from citation #{}'.format(citation_id), err=not Firebase.verbose)
+    click.echo('citation #{} updated'.format(citation_id), err=not Firebase.verbose)
 
 
 @cli.command()
@@ -171,58 +174,10 @@ def citation_fill_data(Firebase, citation_id):
 
 @cli.command()
 @click.pass_obj
-@click.argument('format')
+@click.argument('style')
 @click.argument('project_id')
 def export(Firebase, format, project_id):
-    try:
-        project_id = int(project_id)
-    except:
-        print("bad project id")
-        return
-    try:
-        exist = False
-        for x in Firebase.f_get(['projects']).each():
-            print(x.key())
-            if int(x.key()) == int(project_id):
-                exist = True
-                break
-        if not exist:
-            print("project id desnt exist")
-            return
-    except:
-        print("Error - excpecting int variable")
-    cit_ids = []
-    for x in Firebase.f_get(["citations"]).each():
-        if project_id < len(x.val()['projects']) and x.val()['projects'][project_id] == 'active':
-            cit_ids.append(x.key())
-    if len(cit_ids) <= 0:
-        return
-    table = {'book': 'pubnonperiodical',
-             'chapter': 'pubnonperiodical',
-             'magazine': 'pubmagazine',
-             'newspaper': 'pubnewspaper',
-             'journal': 'pubjournal',
-             'website': 'pubonline',
-             }
-    data = {}
-    for x in Firebase.f_get(["citations"]).each():
-        data[x.key()] = x.val()
-    url = 'https://api.citation-api.com/rest/cite'
-    file = open('export.txt', 'w')
-    for x in cit_ids:
-        bib_data = {"key": '6f84d749966f7623e3854371391daf87', 'url': url}
-        type = data[x]['type']
-        bib_data['source'] = type
-        bib_data['style'] = format
-        bib_data['pubtype'] = {'main': table[type]}
-        bib_data[type] = {}
-        bib_data[table[type]] = data[x]['data']
-        contributors = data[x]['author']
-        contributors['function'] = 'author'
-        bib_data['contributors'] = [contributors]
-        up = requests.post(url, json=bib_data)
-        print(up.json())
-        file.write(up.json())
+
 
 
 cli()

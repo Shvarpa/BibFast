@@ -11,7 +11,7 @@ class Firebase(object):
             "storageBucket": "bibfast-6a6a9.appspot.com",
         }
         #####verbose
-        self.verbose=False
+        self.verbose=True
         #####verbose
         self.firebase = pyrebase.initialize_app(config)
         self.db = self.firebase.database()
@@ -73,33 +73,33 @@ class Firebase(object):
             result = None
         return result
 
-    def complex_find(self, start_path, ord, value, ord_type='key'):
-        result = self.reach(start_path)
-        if not isinstance(value, str):
-            try:
-                value = str(value)
-            except:
-                return 'bad value'
-        result = result.order_by_child(ord)
-        if ord_type == 'val' or ord_type == 'value':
-            result = result.order_by_value()
-        else:
-            result = result.order_by_key().equal_to(value).get(self.authkey)
-        if isinstance(result, pyrebase.pyrebase.PyreResponse):
-            try:
-                result = result.val()
-                if value in result:
-                    result=result[value]
-            except:
-                try:
-                    result = result.each()
-                except:
-                    return None
-        else:
-            result = None
-        if result == []:
-            result = None
-        return result
+    # def complex_find(self, start_path, ord, value, ord_type='key'):
+    #     result = self.reach(start_path)
+    #     if not isinstance(value, str):
+    #         try:
+    #             value = str(value)
+    #         except:
+    #             return 'bad value'
+    #     result = result.order_by_child(ord)
+    #     if ord_type == 'val' or ord_type == 'value':
+    #         result = result.order_by_value()
+    #     else:
+    #         result = result.order_by_key().equal_to(value).get(self.authkey)
+    #     if isinstance(result, pyrebase.pyrebase.PyreResponse):
+    #         try:
+    #             result = result.val()
+    #             if value in result:
+    #                 result=result[value]
+    #         except:
+    #             try:
+    #                 result = result.each()
+    #             except:
+    #                 return None
+    #     else:
+    #         result = None
+    #     if result == []:
+    #         result = None
+    #     return result
 
     def generate_possible_key(self, path):
         data = self.get(path)
@@ -111,7 +111,7 @@ class Firebase(object):
                     key += 1
                 else:
                     break
-        return key
+        return str(key)
 
     def print_pyrebase(self, data):
         if isinstance(data, pyrebase.pyrebase.Database):
@@ -125,6 +125,15 @@ class Firebase(object):
             for k in data:
                 print("{} , {}".format(k, data[k]))
 
+
     def eprint(self,*args, **kwargs):
         if self.verbose:
             print(*args, **kwargs)
+
+    def get_citations(self,project_id):
+        if self.find("projects", project_id) == None:
+            self.eprint("Error - project does'nt exist")
+            return
+        x=self.get('citations')
+        result=[]
+        return result

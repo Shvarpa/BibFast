@@ -1,6 +1,6 @@
 import json
 from collections import OrderedDict
-
+import requests
 
 class Projects(object):
     fields = {'name': None,
@@ -33,13 +33,21 @@ class Citation(object):
     fields = {
         "status": ['active', 'inactive'],
         "type": ['book', 'chapter', 'magazine', 'newspaper', 'journal', 'website'],
-        "get pub type": {
+        "get pubtype": {
             'book': 'pubnonperiodical',
             'chapter': 'pubnonperiodical',
             'magazine': 'pubmagazine',
             'newspaper': 'pubnewspaper',
             'journal': 'pubjournal',
             'website': 'pubonline',
+        },
+        "source": {
+            'book': {},
+            'chapter': {'title': 'name of chapter/story', 'type': 'two options: story/essay'},
+            'magazine': {'title': 'article title'},
+            'newspaper': {'title': 'article title'},
+            'journal': {'title': 'article title'},
+            'website': {'title': 'web page title'},
         },
         "pubtype": {
             'pubnonperiodical': OrderedDict([
@@ -114,24 +122,54 @@ class Citation(object):
     def fromdict(cls, data):
         return cls(data)
 
+    def check_path(self, path):
+        x = self.data
+        if isinstance(path, str):
+            path = path.replace(',', '/').split("/")
+        for p in path:
+            x.get(p, None)
+            if x == None:
+                return False
+        return True
+
+    def add_project(self,project_id):
+        self.data['projects'][project_id]='active'
+
+    def change_project_status(self,project_id,status):
+        if status not in ['active','inactive']:
+            return 'bad status'
+        if project_id not in self.data['projects']:
+            return "has no project with id #{}".format(project_id)
+        self.data["projects"][project_id]=status
+
+    def remove_project(self,project_id):
+        if project_id not in self.data['projects']:
+            return "has no project with id #{}".format(project_id)
+        self.data["projects"].remove(project_id)
+        if self.data['projects'] =={} or self.data['projects']==[]:
+            self.data=None
+
     def set_type(self, type):
-        if not type in Citation.fields['get pub type']:
+        if type not in Citation.fields['get pubtype']:
             return "bad type"
         self.data['type'] = type
-        pub_type = Citation.fields['get pub type'][type]
+        pub_type = Citation.fields['get pubtype'][type]
         if not 'data' in self.data:
             self.data['data'] = {}
-        self.data['data']['pubdata'] = {key: '' for key, _ in Citation.fields['pubtype'][pub_type].items()}
+        self.data['data']['pubtype'] = {key: '' for key, _ in Citation.fields['pubtype'][pub_type].items()}
+        self.data['data']['source'] = {key: '' for key, _ in Citation.fields['source'][type].items()}
 
     def fill_data(self):
         if 'type' not in self.data:
             return "citation type not set"
         type = self.data['type']
-        pub_type = Citation.fields['get pub type'][type]
+        pub_type = Citation.fields['get pubtype'][type]
         if not 'data' in self.data:
             self.data['data'] = {}
-        self.data['data']['pubdata'] = {key: input("Enter {} ({}):".format(key, info)) for key, info in
+        self.data['data']['pubtype'] = {key: input("Enter {} ({}):".format(key, info)) for key, info in
                                         Citation.fields['pubtype'][pub_type].items()}
+        self.data['data']['source'] = {key: input("Enter {} ({}):".format(key, info)) for key, info in
+                                       Citation.fields['source'][type].items()}
 
     @staticmethod
     def create_contributor(function, name):
@@ -154,15 +192,6 @@ class Citation(object):
             contributor['last'] = name[2]
         return contributor
 
-    def check_path(self,path):
-        x=self.data
-        if isinstance(path,str):
-            path = path.replace(',', '/').split("/")
-        for p in path:
-            x.get(p,None)
-            if x==None:
-                return False
-        return True
 
     def add_contributor(self, function, name):
         contributor = Citation.create_contributor(function, name)
@@ -186,16 +215,21 @@ class Citation(object):
                 break
         return True
 
-    def reformat_easybib(self,style='mla7'):
+    def reformat_easybib(self, style='mla7'):
         if 'type' not in self.data:
             return None
-        type=self.data['type']
+        type = self.data['type']
+        pubtype = Citation.fields["get pubtype"][type]
         reformated_data = {
             'key': "0bacd70c03c401a5b74fb39bcdeec6f4",
-            'source':self.data['type'],
-            'style':style,
-            type:dict(('title',self.data['data']['pubdata']['title']) if self.check_path(('data','pubdata','title')) and type!='book' else None),
-
-
+            'source': self.data['type'],
+            'style': style,
+            type: self.data['data']['source'] if self.check_path(('data', 'source')) else {},
+            pubtype: self.data['data']['pubtype'] if self.check_path(('data', 'source')) else {},
+            'contributors': self.data['data']['contributors'] if self.check_path(('data', 'contributors')) else [{}]
         }
         return reformated_data
+
+    def export_easybib(self):
+        test = requests.post('https://api.citation-api.com/rest/cite', json=self.reformat_easybib())
+        print(test.json())

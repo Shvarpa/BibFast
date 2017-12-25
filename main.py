@@ -76,6 +76,9 @@ def create_citation(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
+    if ref.find("projects", project_id) == None:
+        ref.eprint("Error - project #{} does'nt exist".format(project_id))
+        return
     citation_id = ref.generate_possible_key("citations")
     citation = Citation(project_id)
     ref.set(['citations', citation_id], citation.data)
@@ -167,3 +170,49 @@ def citation_fill_data(ref, citation_id):
     ref.set(("citations", citation_id), citation.data)
     ref.eprint('citation #{} updated'.format(citation_id))
 
+########################################################################################################
+
+def citation_add_project(ref,citation_id,project_id):
+    if ref.find("citations", citation_id) == None:
+        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+        return
+    if ref.find("projects", project_id) == None:
+        ref.eprint("Error - project #{} does'nt exist".format(project_id))
+        return
+    citation = Citation.fromdict(ref.find(("citations"), citation_id))
+    status = citation.add_project(project_id)
+    if isinstance(status, str):
+        ref.eprint('could not add project ({})'.format(status))
+        return
+    ref.set(("citations", citation_id), citation.data)
+    ref.eprint('citation #{} updated'.format(citation_id))
+
+def citation_change_project_status(ref,citation_id,project_id,project_status):
+    if ref.find("citations", citation_id) == None:
+        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+        return
+    if ref.find("projects", project_id) == None:
+        ref.eprint("Error - project #{} does'nt exist".format(project_id))
+        return
+    citation = Citation.fromdict(ref.find(("citations"), citation_id))
+    status = citation.change_project_status(project_id,project_status)
+    if isinstance(status, str):
+        ref.eprint('could not change project status ({})'.format(status))
+        return
+    ref.set(("citations", citation_id), citation.data)
+    ref.eprint('citation #{} updated'.format(citation_id))
+
+def citation_remove_project(ref,citation_id,project_id):
+    if ref.find("citations", citation_id) == None:
+        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+        return
+    if ref.find("projects", project_id) == None:
+        ref.eprint("Error - project #{} does'nt exist".format(project_id))
+        return
+    citation = Citation.fromdict(ref.find(("citations"), citation_id))
+    status = citation.remove_project(project_id)
+    if isinstance(status, str):
+        ref.eprint('could not remove project ({})'.format(status))
+        return
+    ref.set(("citations", citation_id), citation.data)
+    ref.eprint('citation #{} updated'.format(citation_id))
