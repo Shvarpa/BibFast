@@ -154,6 +154,16 @@ class Citation(object):
             contributor['last'] = name[2]
         return contributor
 
+    def check_path(self,path):
+        x=self.data
+        if isinstance(path,str):
+            path = path.replace(',', '/').split("/")
+        for p in path:
+            x.get(p,None)
+            if x==None:
+                return False
+        return True
+
     def add_contributor(self, function, name):
         contributor = Citation.create_contributor(function, name)
         if not isinstance(contributor, dict):
@@ -175,3 +185,17 @@ class Citation(object):
                 self.data['data']['contributors'].remove(c)
                 break
         return True
+
+    def reformat_easybib(self,style='mla7'):
+        if 'type' not in self.data:
+            return None
+        type=self.data['type']
+        reformated_data = {
+            'key': "0bacd70c03c401a5b74fb39bcdeec6f4",
+            'source':self.data['type'],
+            'style':style,
+            type:dict(('title',self.data['data']['pubdata']['title']) if self.check_path(('data','pubdata','title')) and type!='book' else None),
+
+
+        }
+        return reformated_data
