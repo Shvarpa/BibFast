@@ -1,6 +1,7 @@
 import click
-from common_classes import Projects
+from common_classes import Projects, Citation
 from firebase import Firebase
+import requests
 import pyrebase
 
 pass_Firebase = click.make_pass_decorator(Firebase, ensure=True)
@@ -17,264 +18,126 @@ def cli(Firebase):
 @click.pass_obj
 @click.argument('name', type=str)
 def create_project(Firebase, name):
-    """
-    recieve name and add project
-    """
-    key = Firebase.generate_possible_key("project")
-    Firebase.set(("project", key), Projects(name).data)
+    """add project to database by name"""
+    project_id = Firebase.generate_possible_key("projects")
+    Firebase.set(("projects", project_id), Projects(name).data)
     click.echo('project added')
 
+@cli.command()
+@click.pass_obj
+@click.argument('project_id',type=str)
+@click.argument('status')
+def project_status_set(Firebase, project_id, status):
+    """change project status by his project id"""
+    if Firebase.find("projects", project_id) == None:
+        click.echo("Error - project does'nt exist", err=not Firebase.verbose)
+        return
+    Firebase.update(('projects',project_id),{"status":status})
+    click.echo('project #{} updated'.format(project_id), err=not Firebase.verbose)
 
 @cli.command()
 @click.pass_obj
-@click.argument('key', type=int)
-def delete_project(Firebase, key):
-    if Firebase.find("projects", key) == None:
-        click.echo('Error project dont exist', err=True)
-        return 'Error - project doesnt exist'
+@click.argument('project_id', type=int)
+def delete_project(Firebase, project_id):
+    """delete project from database by his project id"""
+    if Firebase.find("projects", project_id) == None:
+        click.echo("Error - project does'nt exist", err=not Firebase.verbose)
+        return
     else:
-        Firebase.remove(("projects", key))
-        click.echo('project #{} removed'.format(key), err=True)
+        Firebase.remove(("projects", project_id))
+        click.echo('project #{} removed'.format(project_id), err=Firebase.verbose)
 
 
 @cli.command()
 @click.pass_obj
-@click.argument('key', type=int)
+@click.argument('project_id', type=str)
 @click.option('--name', default=None, type=str)
 @click.option('--status', default=None, type=str)
-def project_update(Firebase, key, name, status):
-    data = Firebase.find("projects", key)
+def project_update(Firebase, project_id, name, status):
+    data = Firebase.find("projects", project_id)
     if data == None:
-        click.echo('Error project dont exist', err=True)
-        return 'Error - project doesnt exist'
-    current_project=Projects.fromdict(data)
-    if name!=None:
+        click.echo("Error - project does'nt exist", err=not Firebase.verbose)
+        return
+    current_project = Projects.fromdict(data)
+    if name != None:
         current_project.set_name(name)
-    if status!=None:
+    if status != None:
         current_project.set_status(status)
-    Firebase.update(('projects',key),current_project.data)
-    click.echo('project #{} updated'.format(key), err=True)
+    Firebase.update(('projects', project_id), current_project.data)
+    click.echo('project #{} updated'.format(project_id), err=not Firebase.verbose)
 
 
 @cli.command()
 @click.pass_obj
 def print_projects(Firebase):
     Firebase.print_pyrebase(Firebase.get("projects"))
+    click.echo("projects printed successfully", err=not Firebase.verbose)
 
-####################################################################
 
 @cli.command()
 @click.pass_obj
-@click.argument(Firebase, 'project_name')
-def create_citation(project_name):
-    key=Firebase.generate_possible_key("citations")
-    data = {}
-    for k in ["project", "status", "type", "auther", "year", "publisher"]:
-        if k == "project":
-            data[k] = {"name": project_name}
-        elif k == "auther":
-            data[k] = {"first": None, "last": None}
-        elif k == "status":
-            data[k] = "active"
-        else:
-            data[k] = ""
-        Firebase.db.child("citation").child(citation_id).set(data, Firebase.authkey)
+@click.argument(Firebase, 'project_id')
+def create_citation(Firebase, project_id):
+    citation_id = Firebase.generate_possible_key("citations")
+    citation = Citation(project_id)
+    Firebase.set(['citations',citation_id],citation.data)
+    click.echo('citation #{} created'.format(citation_id), err=not Firebase.verbose)
 
 
 @cli.command()
 @click.pass_obj
 def password_init(Firebase):
-    Firebase.db.child("user").set({"password": "1234"}, Firebase.authkey)
-
+    Firebase.set("user",{"password": "1234"})
+    click.echo('password initialized', err=not Firebase.verbose)
 
 @cli.command()
 @click.pass_obj
-@click.argument('password')
+@click.argument('password',type=str)
 def set_password(Firebase, password):
-    Firebase.db.child("user").update({"password": password}, Firebase.authkey)
+    Firebase.update("user",{'password':password})
+    click.echo('password updated', err=not Firebase.verbose)
 
 
-@cli.command()
-@click.pass_obj
-@click.argument('id')
-@click.argument('status')
-def project_status_set(Firebase, id, status):
-    """change id status by id"""
-    if status not in {"active", "projected", "archived"}:
-        print("bad status")
-        return
-    for n in Firebase.get(["projects"]).each():
-        if int(id) == int(n.key()):
-            Firebase.update(["projects", id], {"status": status})
-            print('status updated')
-            return
-    print('Error project dont exist')
-
-
-@cli.command()
-@click.pass_obj
-@click.argument('id')
-@click.argument('status')
-def project_status_set(Firebase, id, status):
-    """change id status by id"""
-    if status not in ("active", "projected", "archived"):
-        print("bad status")
-        return
-    for n in Firebase.get(["projects"]).each():
-        if int(id) == int(n.key()):
-            Firebase.update(["projects", id], {"status": status})
-            print('status updated')
-            return
-    print('Error project dont exist')
-
+# @cli.command()
+# @click.pass_obj
+# @click.argument('id')
+# def fill_citation(Firebase, id):
+#     exist = False
+#     for x in Firebase.f_get(['citations']).each():
+#         if int(x.key()) == int(id):
+#             exist = True
+#             break
+#     if not exist:
+#         print("bad id")
+#         return
+#     data = Firebase.f_get(["citations", id, "data"])
+#     dict_from_data = {}
+#     for x in data.each():
+#         dict_from_data[x.key()] = x.val()
+#     for x in dict_from_data:
+#         if dict_from_data[x] == '':
+#             dict_from_data[x] = input("enter {}:".format(x))
+#     Firebase.f_update(["citations", id, "data"], dict_from_data)
+#     print("citation id={} updated".format(id))
+#
 
 @cli.command()
 @click.pass_obj
-@click.argument('project_id')
-@click.argument('status')
-@click.argument('type')
-def create_citation(Firebase, project_id, status, type):
-    """add dataless citation to database linked to a project and status"""
-    for x in Firebase.f_get(['projects']).each():
-        if x.key == project_id:
-            print("bad project id")
-            return
-    if status not in ("active", "inactive"):
-        print("bad status")
+@click.argument('citation_id',type=str)
+@click.argument('type',type=str)
+@click.argument('name',type=str)
+def citation_add_contributor(Firebase, citation_id,type,name):
+    citation = Citation.fromdict(Firebase.find(("citations"), citation_id)[citation_id])
+    for y in citation.data:
+        print (y, citation.data[y])
+    status = citation.add_contributor(type, name)
+    if isinstance(status, str):
+        click.echo('could not add contributor ({})'.format(status),err=not Firebase.verbose)
         return
-    cit_type_details_table = {
-        "book": [
-            "title", "publisher", "city", "state", "vol", "editiotext", "year", "start", "end"
-        ]
-        ,
-        "chapter": [
-            "title", "publisher", "city", "state", "vol", "editiotext", "year", "start", "end"
-        ]
-        ,
-        "magazine": [
-            "title", "vol", "day", "month", "year", "start", "end"
-        ],
-        "newspaper": [
-            "title", "edition", "section", "city", "day", "month", "year", "start", "end", "nonconsecutive"
-        ],
-        "journal": [
-            "title", "issue", "volume", "restarts", "series", "year", "start", "end", "nonconsecutive"
-        ],
-        "website": [
-            "title", "inst", "day", "month", "year", "url", "dayaccessed", "monthaccssed", "yearaccessed"
-        ],
-    }
-    if type not in cit_type_details_table.keys():
-        print("bad type")
-        return
-    citations = Firebase.f_get(["citations"]).each()
-    if not citations: return
-    id = 0
-    for n in citations:
-        if id == n.key() and n.val():
-            id += 1
-        else:
-            break
-    Firebase.f_set(["citations", id], {"projects": {project_id: status}, "type": type})
-    data = {}
-    for k in cit_type_details_table[type]:
-        data[k] = ""
-    Firebase.f_set(["citations", id, "data"], data)
+    Firebase.set(("citations",citation_id), citation.data)
+    click.echo('add contributor to citation #{}'.format(citation_id),err=not Firebase.verbose)
 
-
-@cli.command()
-@click.pass_obj
-@click.argument('id')
-def fill_citation(Firebase, id):
-    exist = False
-    for x in Firebase.f_get(['citations']).each():
-        if int(x.key()) == int(id):
-            exist = True
-            break
-    if not exist:
-        print("bad id")
-        return
-    data = Firebase.f_get(["citations", id, "data"])
-    dict_from_data = {}
-    for x in data.each():
-        dict_from_data[x.key()] = x.val()
-    for x in dict_from_data:
-        if dict_from_data[x] == '':
-            dict_from_data[x] = input("enter {}:".format(x))
-    Firebase.f_update(["citations", id, "data"], dict_from_data)
-    print("citation id={} updated".format(id))
-
-
-@cli.command()
-@click.pass_obj
-@click.argument('id')
-@click.argument('status')
-def project_status_set(Firebase, id, status):
-    """change id status by id"""
-    if status not in ("active", "projected", "archived"):
-        print("bad status")
-        return
-    for n in Firebase.get(["projects"]).each():
-        if int(id) == int(n.key()):
-            Firebase.update(["projects", id], {"status": status})
-            print('status updated')
-            return
-    print('Error project dont exist')
-
-
-@cli.command()
-@click.pass_obj
-@click.argument('project_id')
-@click.argument('status')
-@click.argument('type')
-def create_citation(Firebase, project_id, status, type):
-    """add dataless citation to database linked to a project and status"""
-    for x in Firebase.f_get(['projects']).each():
-        if x.key == project_id:
-            print("bad project id")
-            return
-    if status not in ("active", "inactive"):
-        print("bad status")
-        return
-    cit_type_details_table = {
-        "book": [
-            "title", "publisher", "city", "state", "vol", "editiotext", "year", "start", "end"
-        ]
-        ,
-        "chapter": [
-            "title", "publisher", "city", "state", "vol", "editiotext", "year", "start", "end"
-        ]
-        ,
-        "magazine": [
-            "title", "vol", "day", "month", "year", "start", "end"
-        ],
-        "newspaper": [
-            "title", "edition", "section", "city", "day", "month", "year", "start", "end", "nonconsecutive"
-        ],
-        "journal": [
-            "title", "issue", "volume", "restarts", "series", "year", "start", "end", "nonconsecutive"
-        ],
-        "website": [
-            "title", "inst", "day", "month", "year", "url", "dayaccessed", "monthaccssed", "yearaccessed"
-        ],
-    }
-    if type not in cit_type_details_table.keys():
-        print("bad type")
-        return
-    citations = Firebase.f_get(["citations"]).each()
-    if not citations: return
-    id = 0
-    for n in citations:
-        if id == n.key() and n.val():
-            id += 1
-        else:
-            break
-    Firebase.f_set(["citations", id], {"projects": {project_id: status}, "type": type})
-    data = {}
-    for k in cit_type_details_table[type]:
-        data[k] = input("enter {}:".format(k))
-    Firebase.f_set(["citations", id, "data"], data)
-
+####################################################################
 
 @cli.command()
 @click.pass_obj
