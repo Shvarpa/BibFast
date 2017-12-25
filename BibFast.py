@@ -27,7 +27,7 @@ def create_project(Firebase, name):
 @cli.command()
 @click.pass_obj
 @click.argument('project_id', type=str)
-@click.argument('status')
+@click.argument('status',type=str)
 def project_status_set(Firebase, project_id, status):
     """change project status by his project id"""
     if Firebase.find("projects", project_id) == None:
@@ -78,7 +78,7 @@ def print_projects(Firebase):
 
 @cli.command()
 @click.pass_obj
-@click.argument(Firebase, 'project_id')
+@click.argument('project_id',type=str)
 def create_citation(Firebase, project_id):
     citation_id = Firebase.generate_possible_key("citations")
     citation = Citation(project_id)
@@ -101,28 +101,6 @@ def set_password(Firebase, password):
     click.echo('password updated', err=not Firebase.verbose)
 
 
-# @cli.command()
-# @click.pass_obj
-# @click.argument('id')
-# def fill_citation(Firebase, id):
-#     exist = False
-#     for x in Firebase.f_get(['citations']).each():
-#         if int(x.key()) == int(id):
-#             exist = True
-#             break
-#     if not exist:
-#         print("bad id")
-#         return
-#     data = Firebase.f_get(["citations", id, "data"])
-#     dict_from_data = {}
-#     for x in data.each():
-#         dict_from_data[x.key()] = x.val()
-#     for x in dict_from_data:
-#         if dict_from_data[x] == '':
-#             dict_from_data[x] = input("enter {}:".format(x))
-#     Firebase.f_update(["citations", id, "data"], dict_from_data)
-#     print("citation id={} updated".format(id))
-#
 
 @cli.command()
 @click.pass_obj
@@ -187,7 +165,7 @@ def citation_fill_data(Firebase, citation_id):
         return
     Firebase.set(("citations", citation_id), citation.data)
     click.echo('citation #{} updated'.format(citation_id), err=not Firebase.verbose)
-    
+
 
 ####################################################################
 

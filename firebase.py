@@ -124,3 +124,7 @@ class Firebase(object):
         if isinstance(data, dict):
             for k in data:
                 print("{} , {}".format(k, data[k]))
+
+    def eprint(self,*args, **kwargs):
+        if self.verbose:
+            print(*args, **kwargs)
