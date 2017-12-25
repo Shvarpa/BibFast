@@ -23,17 +23,19 @@ def create_project(Firebase, name):
     Firebase.set(("projects", project_id), Projects(name).data)
     click.echo('project added')
 
+
 @cli.command()
 @click.pass_obj
-@click.argument('project_id',type=str)
+@click.argument('project_id', type=str)
 @click.argument('status')
 def project_status_set(Firebase, project_id, status):
     """change project status by his project id"""
     if Firebase.find("projects", project_id) == None:
         click.echo("Error - project does'nt exist", err=not Firebase.verbose)
         return
-    Firebase.update(('projects',project_id),{"status":status})
+    Firebase.update(('projects', project_id), {"status": status})
     click.echo('project #{} updated'.format(project_id), err=not Firebase.verbose)
+
 
 @cli.command()
 @click.pass_obj
@@ -80,21 +82,22 @@ def print_projects(Firebase):
 def create_citation(Firebase, project_id):
     citation_id = Firebase.generate_possible_key("citations")
     citation = Citation(project_id)
-    Firebase.set(['citations',citation_id],citation.data)
+    Firebase.set(['citations', citation_id], citation.data)
     click.echo('citation #{} created'.format(citation_id), err=not Firebase.verbose)
 
 
 @cli.command()
 @click.pass_obj
 def password_init(Firebase):
-    Firebase.set("user",{"password": "1234"})
+    Firebase.set("user", {"password": "1234"})
     click.echo('password initialized', err=not Firebase.verbose)
+
 
 @cli.command()
 @click.pass_obj
-@click.argument('password',type=str)
+@click.argument('password', type=str)
 def set_password(Firebase, password):
-    Firebase.update("user",{'password':password})
+    Firebase.update("user", {'password': password})
     click.echo('password updated', err=not Firebase.verbose)
 
 
@@ -123,34 +126,68 @@ def set_password(Firebase, password):
 
 @cli.command()
 @click.pass_obj
-@click.argument('citation_id',type=str)
-@click.argument('type',type=str)
-@click.argument('name',type=str)
-def citation_add_contributor(Firebase, citation_id,type,name):
+@click.argument('citation_id', type=str)
+@click.argument('type', type=str)
+@click.argument('name', type=str)
+def citation_add_contributor(Firebase, citation_id, type, name):
     citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
     status = citation.add_contributor(type, name)
     if isinstance(status, str):
-        click.echo('could not add contributor ({})'.format(status),err=not Firebase.verbose)
+        click.echo('could not add contributor ({})'.format(status), err=not Firebase.verbose)
         return
-    Firebase.set(("citations",citation_id), citation.data)
-    click.echo('add contributor to citation #{}'.format(citation_id),err=not Firebase.verbose)
+    Firebase.set(("citations", citation_id), citation.data)
+    click.echo('add contributor to citation #{}'.format(citation_id), err=not Firebase.verbose)
+
 
 @cli.command()
 @click.pass_obj
-@click.argument('citation_id',type=str)
-@click.argument('type',type=str)
-def citation_remove_contributor(Firebase, citation_id,type):
+@click.argument('citation_id', type=str)
+@click.argument('type', type=str)
+def citation_remove_contributor(Firebase, citation_id, type):
     if Firebase.find("citations", citation_id) == None:
         click.echo("Error - citation #{} does'nt exist".format(citation_id), err=not Firebase.verbose)
         return
     citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
     status = citation.remove_contributor(type)
     if isinstance(status, str):
-        click.echo('could not remove contributor ({})'.format(status),err=not Firebase.verbose)
+        click.echo('could not remove contributor ({})'.format(status), err=not Firebase.verbose)
         return
-    Firebase.set(("citations",citation_id), citation.data)
-    click.echo('removed contributor from citation #{}'.format(citation_id),err=not Firebase.verbose)
+    Firebase.set(("citations", citation_id), citation.data)
+    click.echo('removed contributor from citation #{}'.format(citation_id), err=not Firebase.verbose)
 
+
+@cli.command()
+@click.pass_obj
+@click.argument('citation_id', type=str)
+@click.argument('type', type=str)
+def citation_set_type(Firebase, citation_id, type):
+    if Firebase.find("citations", citation_id) == None:
+        click.echo("Error - citation #{} does'nt exist".format(citation_id), err=not Firebase.verbose)
+        return
+    citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
+    status = citation.set_type(type)
+    if isinstance(status, str):
+        click.echo('could not set publication type ({})'.format(status), err=not Firebase.verbose)
+        return
+    Firebase.set(("citations", citation_id), citation.data)
+    click.echo('removed contributor from citation #{}'.format(citation_id), err=not Firebase.verbose)
+
+
+@cli.command()
+@click.pass_obj
+@click.argument('citation_id', type=str)
+def citation_fill_data(Firebase, citation_id):
+    if Firebase.find("citations", citation_id) == None:
+        click.echo("Error - citation #{} does'nt exist".format(citation_id), err=not Firebase.verbose)
+        return
+    citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
+    status = citation.fill_data()
+    if isinstance(status, str):
+        click.echo('could not fill citation data ({})'.format(status), err=not Firebase.verbose)
+        return
+    Firebase.set(("citations", citation_id), citation.data)
+    click.echo('citation #{} updated'.format(citation_id), err=not Firebase.verbose)
+    
 
 ####################################################################
 
