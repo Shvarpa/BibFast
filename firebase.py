@@ -51,20 +51,55 @@ class Firebase(object):
 
     def find(self, path, value):
         x = self.reach(path)
-        if not isinstance(value,str):
+        if not isinstance(value, str):
             try:
-                value=str(value)
+                value = str(value)
             except:
                 return 'bad value'
         result = x.order_by_key().equal_to(value).get(self.authkey)
-        try:
-            result=result.val()
-        except IndexError:
-            result=None
+        if isinstance(result, pyrebase.pyrebase.PyreResponse):
+            try:
+                result = result.val()
+            except:
+                try:
+                    result = result.each()
+                except:
+                    return None
+        else:
+            result = None
+        if result == []:
+            result = None
+        return result
+
+    def complex_find(self, start_path, ord, value, ord_type='key'):
+        result = self.reach(start_path)
+        if not isinstance(value, str):
+            try:
+                value = str(value)
+            except:
+                return 'bad value'
+        result = result.order_by_child(ord)
+        if ord_type == 'val' or ord_type == 'value':
+            result = result.order_by_value()
+        else:
+            result = result.order_by_key().equal_to(value).get(self.authkey)
+        if isinstance(result, pyrebase.pyrebase.PyreResponse):
+            try:
+                result = result.val()
+            except:
+                try:
+                    result = result.each()
+                except:
+                    return None
+        else:
+            result = None
+        if result == []:
+            result = None
         return result
 
     def generate_possible_key(self, path):
-        data = self.get(path).each()
+        data = self.get(path)
+        data = data.each()
         key = 0
         if data != None:
             for n in data:
@@ -74,9 +109,9 @@ class Firebase(object):
                     break
         return key
 
-    def print_pyrebase(self,data):
-        if isinstance(data,pyrebase.pyrebase.Database):
-            data=data.get()
+    def print_pyrebase(self, data):
+        if isinstance(data, pyrebase.pyrebase.Database):
+            data = data.get(self.authkey)
         if isinstance(data, pyrebase.pyrebase.PyreResponse):
             data = data.each()
             for k in data:
