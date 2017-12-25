@@ -149,7 +149,7 @@ def citation_remove_contributor(Firebase, citation_id,type):
         click.echo('could not remove contributor ({})'.format(status),err=not Firebase.verbose)
         return
     Firebase.set(("citations",citation_id), citation.data)
-    click.echo('add contributor to citation #{}'.format(citation_id),err=not Firebase.verbose)
+    click.echo('removed contributor from citation #{}'.format(citation_id),err=not Firebase.verbose)
 
 
 ####################################################################
