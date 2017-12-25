@@ -104,9 +104,17 @@ class Citation(object):
         },
     }
 
-    def __init__(self, project_id):
-        self.data = {}
-        self.data['projects'] = (project_id, 'active')
+    def __init__(self, param):
+        """init either from dict or number"""
+        if isinstance(param, dict):
+            self.data = param
+        else:
+            self.data = {}
+            self.data['projects'] = {param: 'active'}
+
+    @classmethod
+    def fromdict(cls, data):
+        return cls(data)
 
     def set_type(self, type):
         if not type in Citation.fields['get pub type']:
@@ -127,7 +135,7 @@ class Citation(object):
             return "bad name"
         name_size = name.__len__()
         if name_size < 1:
-            return 'bad name'
+            return "empty name"
         contributor = {}
         contributor['function'] = function
         contributor['first'] = name[0]
@@ -147,15 +155,15 @@ class Citation(object):
         if 'contributors' not in self.data['data']:
             self.data['data']['contributors'] = []
         self.data['data']['contributors'].append(contributor)
+        return True
 
-    def remove_contributor(self,function):
+    def remove_contributor(self, function):
         if not 'data' in self.data:
             return 'no contributers'
         if not 'contributors' in self.data['data']:
             return 'no contributers'
         for c in self.data['data']['contributors']:
-            if c['function']==function:
+            if c['function'] == function:
                 self.data['data']['contributors'].remove(c)
                 break
-        return 'deleted contributor'
-
+        return True

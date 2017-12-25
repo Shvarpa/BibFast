@@ -10,14 +10,14 @@ class Firebase(object):
             "databaseURL": "https://bibfast-6a6a9.firebaseio.com/",
             "storageBucket": "bibfast-6a6a9.appspot.com",
         }
+        #####verbose
+        self.verbose=False
+        #####verbose
         self.firebase = pyrebase.initialize_app(config)
         self.db = self.firebase.database()
         self.auth = self.firebase.auth()
         self.storage = self.firebase.storage()
-        try:
-            self.authkey = self.auth.sign_in_with_email_and_password(username, password)['idToken']
-        except requests.exceptions.HTTPError:
-            self.authkey = None
+        self.login(username,password)
 
     def login(self, username='shvarpa@gmail.com', password='123456'):
         try:
@@ -60,6 +60,8 @@ class Firebase(object):
         if isinstance(result, pyrebase.pyrebase.PyreResponse):
             try:
                 result = result.val()
+                if value in result:
+                    result = result[value]
             except:
                 try:
                     result = result.each()
@@ -86,6 +88,8 @@ class Firebase(object):
         if isinstance(result, pyrebase.pyrebase.PyreResponse):
             try:
                 result = result.val()
+                if value in result:
+                    result=result[value]
             except:
                 try:
                     result = result.each()

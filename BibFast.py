@@ -127,15 +127,30 @@ def set_password(Firebase, password):
 @click.argument('type',type=str)
 @click.argument('name',type=str)
 def citation_add_contributor(Firebase, citation_id,type,name):
-    citation = Citation.fromdict(Firebase.find(("citations"), citation_id)[citation_id])
-    for y in citation.data:
-        print (y, citation.data[y])
+    citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
     status = citation.add_contributor(type, name)
     if isinstance(status, str):
         click.echo('could not add contributor ({})'.format(status),err=not Firebase.verbose)
         return
     Firebase.set(("citations",citation_id), citation.data)
     click.echo('add contributor to citation #{}'.format(citation_id),err=not Firebase.verbose)
+
+@cli.command()
+@click.pass_obj
+@click.argument('citation_id',type=str)
+@click.argument('type',type=str)
+def citation_remove_contributor(Firebase, citation_id,type):
+    if Firebase.find("citations", citation_id) == None:
+        click.echo("Error - citation #{} does'nt exist".format(citation_id), err=not Firebase.verbose)
+        return
+    citation = Citation.fromdict(Firebase.find(("citations"), citation_id))
+    status = citation.remove_contributor(type)
+    if isinstance(status, str):
+        click.echo('could not remove contributor ({})'.format(status),err=not Firebase.verbose)
+        return
+    Firebase.set(("citations",citation_id), citation.data)
+    click.echo('add contributor to citation #{}'.format(citation_id),err=not Firebase.verbose)
+
 
 ####################################################################
 
