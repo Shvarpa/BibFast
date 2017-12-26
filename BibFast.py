@@ -1,5 +1,5 @@
 import click
-from common_classes import Projects, Citation
+from common_classes import Project, Citation
 from firebase import Firebase
 import requests
 import pyrebase

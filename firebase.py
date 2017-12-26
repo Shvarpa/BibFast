@@ -103,9 +103,9 @@ class Firebase(object):
 
     def generate_possible_key(self, path):
         data = self.db.child(path).get(self.token).each()
-        if data == None: return False
-        key = 0
-        for n in data:
+        if data == None: return '1'
+        key = 1
+        for n in data[1:]:
             if n.val() != None:
                 key += 1
             else:
@@ -136,7 +136,11 @@ class Firebase(object):
                     pretty(value, indent + 1)
                 else:
                     print('\t' * (indent + 1) + str(value))
-        pretty(self.convert_to_dict(path))
+        data=self.convert_to_dict(path)
+        try:
+            pretty(data)
+        except:
+            pass
 
     def eprint(self, *args, **kwargs):
         if self.verbose:

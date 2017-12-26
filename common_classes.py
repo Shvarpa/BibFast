@@ -9,7 +9,7 @@ class Project(object):
 
     @staticmethod
     def check_status(status):
-        return status if status in Project.fields['status'] else 'active'
+        return status if status in Project.fields['status'] else None
 
     def __init__(self, name, status='active'):
         status = Project.check_status(status)
@@ -17,13 +17,14 @@ class Project(object):
 
     @classmethod
     def fromdict(cls, data):
-        return cls(data.items()[0][0], data.items()[0][1])
+        return cls(data['name'], data['status'])
 
     def set_name(self, name):
         self.data['name'] = name
 
     def set_status(self, status):
-        status = Projects.check_status(status)
+        if not Project.check_status(status):
+            return 'bad status'
         self.data['status'] = status
 
 
@@ -133,7 +134,10 @@ class Citation(object):
         return True
 
     def add_project(self,project_id):
-        self.data['projects'][project_id]='active'
+        if isinstance(self.data['projects'],list):
+            self.data['projects'].insert(project_id,'active')
+        elif isinstance(self.data['projects'],dict):
+            self.data['projects'][project_id]='active'
 
     def change_project_status(self,project_id,status):
         if status not in ['active','inactive']:
