@@ -11,7 +11,7 @@ def create_project(ref, name):
     :param name:str
     """
     project_id = ref.generate_possible_key("projects")
-    ref.db.set(("projects", project_id), Project(name).data)
+    ref.db.child("projects/{}".format(project_id)).set(Project(name).data,ref.token)
     ref.eprint('project added')
 
 
