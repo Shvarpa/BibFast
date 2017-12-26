@@ -2,6 +2,7 @@ import json
 from collections import OrderedDict
 import requests
 
+
 class Project(object):
     fields = {'name': None,
               'status': ['active', 'archived', 'projected']
@@ -133,25 +134,46 @@ class Citation(object):
                 return False
         return True
 
-    def add_project(self,project_id):
-        if isinstance(self.data['projects'],list):
-            self.data['projects'].insert(project_id,'active')
-        elif isinstance(self.data['projects'],dict):
-            self.data['projects'][project_id]='active'
+    def add_project(self, project_id):
+        if isinstance(self.data['projects'], list):
+            try:
+                self.data['projects'].pop(project_id)
+            except:
+                pass
+            self.data['projects'].insert(project_id, 'active')
+        elif isinstance(self.data['projects'], dict):
+            self.data['projects'][project_id] = 'active'
 
-    def change_project_status(self,project_id,status):
-        if status not in ['active','inactive']:
+    def change_project_status(self, project_id, status):
+        print(self.data['projects'])
+        if status not in ['active', 'inactive']:
             return 'bad status'
         if project_id not in self.data['projects']:
             return "has no project with id #{}".format(project_id)
-        self.data["projects"][project_id]=status
+        if isinstance(self.data['projects'], list):
+            if project_id > len(self.data['projects']):
+                return "has no project with id #{}".format(project_id)
+            try:
+                self.data['projects'].pop(project_id)
+            except:
+                pass
+            self.data['projects'].insert(project_id,status)
+        else:
+            if project_id not in self.data['projects']:
+                return "has no project with id #{}".format(project_id)
+            self.data["projects"][project_id] = status
 
-    def remove_project(self,project_id):
-        if project_id not in self.data['projects']:
-            return "has no project with id #{}".format(project_id)
-        self.data["projects"].remove(project_id)
-        if self.data['projects'] =={} or self.data['projects']==[]:
-            self.data=None
+    def remove_project(self, project_id):
+        if isinstance(self.data['projects'], list):
+            if project_id > len(self.data['projects']):
+                return "has no project with id #{}".format(project_id)
+            self.data['projects'].pop(project_id)
+        else:
+            if project_id not in self.data['projects']:
+                return "has no project with id #{}".format(project_id)
+            self.data["projects"].remove(project_id)
+        if self.data['projects'] == {} or self.data['projects'] == []:
+            self.data = None
 
     def set_type(self, type):
         if type not in Citation.fields['get pubtype']:
@@ -195,7 +217,6 @@ class Citation(object):
             contributor['middle'] = name[1]
             contributor['last'] = name[2]
         return contributor
-
 
     def add_contributor(self, function, name):
         contributor = Citation.create_contributor(function, name)

@@ -115,8 +115,12 @@ class Firebase(object):
     def exists(self, path, value):
         data = self.db.child(path).get(self.token).each()
         if data == None: return False
+        try:
+            str_value=str(value)
+        except:
+            str_value=value
         for item in data:
-            if item.key() == value and item.val() != None:
+            if (item.key() == value or item.key()==str_value) and item.val() != None:
                 return True
         return False
 
@@ -128,7 +132,7 @@ class Firebase(object):
             converted[item.key()] = item.val()
         return converted
 
-    def print_pyrebase(self,path):
+    def print_pyrebase(self, path):
         def pretty(d, indent=0):
             for key, value in d.items():
                 print('\t' * indent + str(key))
@@ -136,7 +140,8 @@ class Firebase(object):
                     pretty(value, indent + 1)
                 else:
                     print('\t' * (indent + 1) + str(value))
-        data=self.convert_to_dict(path)
+
+        data = self.convert_to_dict(path)
         try:
             pretty(data)
         except:
