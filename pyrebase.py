@@ -457,8 +457,10 @@ def convert_to_pyre(items):
 
 def convert_list_to_pyre(items):
     pyre_list = []
+    index=0
     for item in items:
-        pyre_list.append(Pyre([items.index(item), item]))
+        pyre_list.append(Pyre([index, item]))
+        index+=1
     return pyre_list
 
 
