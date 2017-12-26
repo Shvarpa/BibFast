@@ -1,6 +1,8 @@
 import pyrebase
 import requests
 
+# TODO change all id's to strings instead of ints
+
 config = {
     "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
     "authDomain": "bibfast-6a6a9.firebaseapp.com",
@@ -142,10 +144,11 @@ class Firebase(object):
                     print('\t' * (indent + 1) + str(value))
 
         data = self.convert_to_dict(path)
-        try:
-            pretty(data)
-        except:
-            pass
+        print(data)
+        # try:
+        #     pretty(data)
+        # except:
+        #     pass
 
     def eprint(self, *args, **kwargs):
         if self.verbose:
