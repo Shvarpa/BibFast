@@ -2,17 +2,17 @@ import json
 from collections import OrderedDict
 import requests
 
-class Projects(object):
+class Project(object):
     fields = {'name': None,
               'status': ['active', 'archived', 'projected']
               }
 
     @staticmethod
     def check_status(status):
-        return status if status in Projects.fields['status'] else 'active'
+        return status if status in Project.fields['status'] else 'active'
 
     def __init__(self, name, status='active'):
-        status = Projects.check_status(status)
+        status = Project.check_status(status)
         self.data = {'name': name, 'status': status}
 
     @classmethod

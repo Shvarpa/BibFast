@@ -1,7 +1,8 @@
-from common_classes import Projects, Citation
+from common_classes import Project, Citation
 from firebase import Firebase
 
-#ref=Firebase()
+
+# ref=Firebase()
 
 
 def create_project(ref, name):
@@ -10,7 +11,7 @@ def create_project(ref, name):
     :param name:str
     """
     project_id = ref.generate_possible_key("projects")
-    ref.set(("projects", project_id), Projects(name).data)
+    ref.db.set(("projects", project_id), Project(name).data)
     ref.eprint('project added')
 
 
@@ -20,12 +21,17 @@ def project_status_set(ref, project_id, status):
     :param project_id:str
     :param status:str
     """
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project does'nt exist")
+    if not ref.exists("projects", project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    ref.update(('projects', project_id), {"status": status})
+    data = ref.convert_to_dict("projects/{}".format(project_id))(ref.token)
+    curr_project = Project.fromdict(data)
+    report = curr_project.set_status(status)
+    if isinstance(report, str):
+        ref.eprint("could not set status ({})".format(report))
+        return
+    ref.db.child('projects/{}'.format(project_id)).set(curr_project.data, ref.token)
     ref.eprint('project #{} updated'.format(project_id))
-
 
 
 def delete_project(ref, project_id):
@@ -33,12 +39,11 @@ def delete_project(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project does'nt exist")
+    if not ref.exists("projects", project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    else:
-        ref.remove(("projects", project_id))
-        ref.eprint('project #{} removed'.format(project_id))
+    ref.db.child('projects/{}'.format(project_id)).remove(ref.token)
+    ref.eprint('project #{} removed'.format(project_id))
 
 
 def project_update(ref, project_id, name=None, status=None):
@@ -48,27 +53,25 @@ def project_update(ref, project_id, name=None, status=None):
     :param name:str
     :param status:str
     """
-    data = ref.find("projects", project_id)
-    if data == None:
-        ref.eprint("Error - project does'nt exist")
+    if not ref.exists("projects", project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    current_project = Projects.fromdict(data)
+    data = ref.convert_to_dict("projects/{}".format(project_id))(ref.token)
+    current_project = Project.fromdict(data)
     if name != None:
         current_project.set_name(name)
     if status != None:
         current_project.set_status(status)
-    ref.update(('projects', project_id), current_project.data)
+    ref.db.child('projects/{}'.format(project_id)).remove(ref.token)
     ref.eprint('project #{} updated'.format(project_id))
-
 
 
 def print_projects(ref):
     """prints out all projects in database
     :param ref:Firebase
     """
-    ref.print_pyrebase(ref.get("projects"))
+    ref.print_pyrebase("projects")
     ref.eprint("projects printed successfully")
-
 
 
 def create_citation(ref, project_id):
@@ -76,12 +79,12 @@ def create_citation(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project #{} does'nt exist".format(project_id))
+    if not ref.exists("projects", project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
         return
     citation_id = ref.generate_possible_key("citations")
-    citation = Citation(project_id)
-    ref.set(['citations', citation_id], citation.data)
+    curr_citation = Citation(project_id)
+    ref.db.child('citations/{}'.format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} created'.format(citation_id))
 
 
@@ -89,7 +92,7 @@ def password_init(ref):
     """initializes password in user database
     :param ref:Firebase
     """
-    ref.set("user", {"password": "1234"})
+    ref.db.child("user").set({"password": "1234"}, ref.token)
     ref.eprint('password initialized')
 
 
@@ -98,9 +101,8 @@ def set_password(ref, password):
     :param ref:Firebase
     :param password:str
     """
-    ref.update("user", {'password': password})
+    ref.db.child("user").set({'password': password}, ref.token)
     ref.eprint('password updated')
-
 
 
 def citation_add_contributor(ref, citation_id, type, name):
@@ -110,12 +112,16 @@ def citation_add_contributor(ref, citation_id, type, name):
     :param type:str
     :param name:str
     """
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.add_contributor(type, name)
-    if isinstance(status, str):
-        ref.eprint('could not add contributor ({})'.format(status))
+    if not ref.exists('citations',citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    ref.set(("citations", citation_id), citation.data)
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.add_contributor(type, name)
+    if isinstance(report, str):
+        ref.eprint('could not add contributor ({})'.format(report))
+        return
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
     ref.eprint('add contributor to citation #{}'.format(citation_id))
 
 
@@ -125,15 +131,16 @@ def citation_remove_contributor(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+    if not ref.exists('citations',citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.remove_contributor(type)
-    if isinstance(status, str):
-        ref.eprint('could not remove contributor ({})'.format(status))
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.remove_contributor(type)
+    if isinstance(report, str):
+        ref.eprint('could not remove contributor ({})'.format(report))
         return
-    ref.set(("citations", citation_id), citation.data)
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
     ref.eprint('removed contributor from citation #{}'.format(citation_id))
 
 
@@ -143,76 +150,89 @@ def citation_set_type(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+    if not ref.exists('citations',citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.set_type(type)
-    if isinstance(status, str):
-        ref.eprint('could not set publication type ({})'.format(status))
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.set_type(type)
+    if isinstance(report, str):
+        ref.eprint('could not set publication type ({})'.format(report))
         return
-    ref.set(("citations", citation_id), citation.data)
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
     ref.eprint('removed contributor from citation #{}'.format(citation_id))
+
 
 def citation_fill_data(ref, citation_id):
     """fill citation data in database by its id
     :param ref:Firebase
     :param citation_id:str
     """
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
+    if not ref.exists('citations',citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.fill_data()
-    if isinstance(status, str):
-        ref.eprint('could not fill citation data ({})'.format(status))
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.fill_data()
+    if isinstance(report, str):
+        ref.eprint('could not fill citation data ({})'.format(report))
         return
-    ref.set(("citations", citation_id), citation.data)
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
+    ref.eprint('citation #{} updated'.format(citation_id))
+
+
+
+def citation_add_project(ref, citation_id, project_id):
+    if not ref.exists('citations', citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
+        return
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    if not ref.exists('citations/{}/projects'.format(citation_id), project_id):
+        ref.eprint("project #{} allready in citation #{}".format(project_id, citation_id))
+        return
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.add_project(project_id)
+    if isinstance(report, str):
+        ref.eprint('could not add project ({})'.format(report))
+        return
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
+    ref.eprint('citation #{} updated'.format(citation_id))
+
+
+def citation_change_project_status(ref, citation_id, project_id, project_status):
+    if not ref.exists('citations', citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
+        return
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.change_project_status(project_id, project_status)
+    if isinstance(report, str):
+        ref.eprint('could not change project status ({})'.format(report))
+        return
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
+    ref.eprint('citation #{} updated'.format(citation_id))
+
+
+def citation_remove_project(ref, citation_id, project_id):
+    if not ref.exists('citations', citation_id):
+        ref.eprint("citation #{} does'nt exist".format(citation_id))
+        return
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    data=ref.convert_to_dict('citations/{}'.format(citation_id))
+    curr_citation = Citation.fromdict(data)
+    report = curr_citation.remove_project(project_id)
+    if isinstance(report, str):
+        ref.eprint('could not remove project ({})'.format(report))
+        return
+    ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data,ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
 
 ########################################################################################################
-
-def citation_add_project(ref,citation_id,project_id):
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
-        return
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project #{} does'nt exist".format(project_id))
-        return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.add_project(project_id)
-    if isinstance(status, str):
-        ref.eprint('could not add project ({})'.format(status))
-        return
-    ref.set(("citations", citation_id), citation.data)
-    ref.eprint('citation #{} updated'.format(citation_id))
-
-def citation_change_project_status(ref,citation_id,project_id,project_status):
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
-        return
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project #{} does'nt exist".format(project_id))
-        return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.change_project_status(project_id,project_status)
-    if isinstance(status, str):
-        ref.eprint('could not change project status ({})'.format(status))
-        return
-    ref.set(("citations", citation_id), citation.data)
-    ref.eprint('citation #{} updated'.format(citation_id))
-
-def citation_remove_project(ref,citation_id,project_id):
-    if ref.find("citations", citation_id) == None:
-        ref.eprint("Error - citation #{} does'nt exist".format(citation_id))
-        return
-    if ref.find("projects", project_id) == None:
-        ref.eprint("Error - project #{} does'nt exist".format(project_id))
-        return
-    citation = Citation.fromdict(ref.find(("citations"), citation_id))
-    status = citation.remove_project(project_id)
-    if isinstance(status, str):
-        ref.eprint('could not remove project ({})'.format(status))
-        return
-    ref.set(("citations", citation_id), citation.data)
-    ref.eprint('citation #{} updated'.format(citation_id))
