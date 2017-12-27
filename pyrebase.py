@@ -455,13 +455,13 @@ def convert_to_pyre(items):
     return pyre_list
 
 
-def convert_list_to_pyre(items):
+def convert_list_to_pyre(items):################bug fix here#####################
     pyre_list = []
     index=0
     for item in items:
         pyre_list.append(Pyre([index, item]))
         index+=1
-    return pyre_list
+    return pyre_list            ################bug fix here#####################
 
 
 class PyreResponse:
