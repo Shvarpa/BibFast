@@ -2,6 +2,7 @@ import pyrebase
 import requests
 
 # DONE change all id's to strings instead of ints
+#TODO check if convert fixes string values for sub dictionaries
 
 config = {
     "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
