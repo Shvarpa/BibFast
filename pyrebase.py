@@ -265,25 +265,21 @@ class Database:
         request_dict = request_object.json(**json_kwargs)
 
         # if primitive or simple query return
-        if isinstance(request_dict, list):
-            return PyreResponse(convert_list_to_pyre(request_dict), query_key)
-        if not isinstance(request_dict, dict):
-            return PyreResponse(request_dict, query_key)
-        if not build_query:
-            return PyreResponse(convert_to_pyre(request_dict.items()), query_key)
+        if isinstance(request_dict,list) or isinstance(request_dict,dict) or (not build_query):
+            return request_dict
         # return keys if shallow
         if build_query.get("shallow"):
-            return PyreResponse(request_dict.keys(), query_key)
+            return request_dict.keys()
         # otherwise sort
         sorted_response = None
         if build_query.get("orderBy"):
             if build_query["orderBy"] == "$key":
-                sorted_response = sorted(request_dict.items(), key=lambda item: item[0])
+                sorted_response = sorted(request_dict, key=lambda item: item[0])
             elif build_query["orderBy"] == "$value":
-                sorted_response = sorted(request_dict.items(), key=lambda item: item[1])
+                sorted_response = sorted(request_dict, key=lambda item: item[1])
             else:
                 sorted_response = sorted(request_dict.items(), key=lambda item: item[1][build_query["orderBy"]])
-        return PyreResponse(convert_to_pyre(sorted_response), query_key)
+        return sorted_response
 
     def push(self, data, token=None, json_kwargs={}):
         request_ref = self.check_token(self.database_url, self.path, token)
@@ -357,7 +353,7 @@ class Database:
             new_list.append(pyre.item)
         # sort
         data = sorted(dict(new_list).items(), key=lambda item: item[1][by_key])
-        return PyreResponse(convert_to_pyre(data), origin.key())
+        return dict(data)
 
 
 class Storage:
@@ -447,62 +443,6 @@ def raise_detailed_error(request_object):
         # TODO: Check if we get a { "error" : "Permission denied." } and handle automatically
         raise HTTPError(e, request_object.text)
 
-
-def convert_to_pyre(items):
-    pyre_list = []
-    for item in items:
-        pyre_list.append(Pyre(item))
-    return pyre_list
-
-
-def convert_list_to_pyre(items):################bug fix here#####################
-    pyre_list = []
-    index=0
-    for item in items:
-        pyre_list.append(Pyre([index, item]))
-        index+=1
-    return pyre_list            ################bug fix here#####################
-
-
-class PyreResponse:
-    def __init__(self, pyres, query_key):
-        self.pyres = pyres
-        self.query_key = query_key
-
-    def val(self):
-        if isinstance(self.pyres, list):
-            # unpack pyres into OrderedDict
-            pyre_list = []
-            # if firebase response was a list
-            if isinstance(self.pyres[0].key(), int):
-                for pyre in self.pyres:
-                    pyre_list.append(pyre.val())
-                return pyre_list
-            # if firebase response was a dict with keys
-            for pyre in self.pyres:
-                pyre_list.append((pyre.key(), pyre.val()))
-            return OrderedDict(pyre_list)
-        else:
-            # return primitive or simple query results
-            return self.pyres
-
-    def key(self):
-        return self.query_key
-
-    def each(self):
-        if isinstance(self.pyres, list):
-            return self.pyres
-
-
-class Pyre:
-    def __init__(self, item):
-        self.item = item
-
-    def val(self):
-        return self.item[1]
-
-    def key(self):
-        return self.item[0]
 
 
 class KeepAuthSession(Session):
