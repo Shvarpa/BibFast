@@ -1,7 +1,7 @@
 import pyrebase
 import requests
 
-# TODO change all id's to strings instead of ints
+# DONE change all id's to strings instead of ints
 
 config = {
     "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
@@ -105,9 +105,9 @@ class Firebase(object):
 
     def generate_possible_key(self, path):
         data = self.db.child(path).get(self.token).each()
-        if data == None: return '1'
-        key = 1
-        for n in data[1:]:
+        if data == None: return '0'
+        key = 0
+        for n in data:
             if n.val() != None:
                 key += 1
             else:
@@ -115,23 +115,23 @@ class Firebase(object):
         return str(key)
 
     def exists(self, path, value):
-        data = self.db.child(path).get(self.token).each()
+        data = self.convert_to_dict(path)
         if data == None: return False
         try:
-            str_value=str(value)
+            value=str(value)
         except:
-            str_value=value
-        for item in data:
-            if (item.key() == value or item.key()==str_value) and item.val() != None:
-                return True
-        return False
+            value=value
+        return value in data
 
     def convert_to_dict(self, path):
         data = self.db.child(path).get(self.token).each()
         if data == None: return None
         converted = {}
         for item in data:
-            converted[item.key()] = item.val()
+            key=item.key()
+            try: key=str(key)
+            except:pass
+            converted[key] = item.val()
         return converted
 
     def print_pyrebase(self, path):
@@ -144,11 +144,10 @@ class Firebase(object):
                     print('\t' * (indent + 1) + str(value))
 
         data = self.convert_to_dict(path)
-        print(data)
-        # try:
-        #     pretty(data)
-        # except:
-        #     pass
+        try:
+            pretty(data)
+        except:
+            print(data)
 
     def eprint(self, *args, **kwargs):
         if self.verbose:
