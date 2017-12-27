@@ -116,6 +116,10 @@ class Citation(object):
         """init either from dict or number"""
         if isinstance(param, dict):
             self.data = param
+            try:
+                self.data['data']['contributors'] = [v for k, v in
+                                                     self.data['data']['contributors'].items()]
+            except:pass
         else:
             self.data = {}
             self.data['projects'] = {param: 'active'}
@@ -157,7 +161,7 @@ class Citation(object):
                 self.data['projects'].pop(project_id)
             except:
                 pass
-            self.data['projects'].insert(project_id,status)
+            self.data['projects'].insert(project_id, status)
         else:
             if project_id not in self.data['projects']:
                 return "has no project with id #{}".format(project_id)

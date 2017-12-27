@@ -2,7 +2,7 @@ import pyrebase
 import requests
 
 # DONE change all id's to strings instead of ints
-#TODO check if convert fixes string values for sub dictionaries
+# TODO check if convert fixes string values for sub dictionaries
 
 config = {
     "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
@@ -31,86 +31,13 @@ class Firebase(object):
         except requests.exceptions.HTTPError:
             self.token = None
 
-    # def reach(self, path):
-    #     x = self.db
-    #     if isinstance(path, str):
-    #         path = path.replace(',', '/').split("/")
-    #     for p in path:
-    #         x = x.child(p)
-    #     return x
-    #
-    # def update(self, path, data):
-    #     x = self.reach(path)
-    #     x.update(data, self.authkey)
-    #
-    # def get(self, path):
-    #     x = self.reach(path)
-    #     return x.get(self.authkey)
-    #
-    # def set(self, path, data):
-    #     x = self.reach(path)
-    #     x.update(data, self.authkey)
-    #
-    # def remove(self, path):
-    #     x = self.reach(path)
-    #     x.remove(self.authkey)
-    #
-    # def find(self, path, value):
-    #     x = self.reach(path)
-    #     if not isinstance(value, str):
-    #         try:
-    #             value = str(value)
-    #         except:
-    #             return 'bad value'
-    #     result = x.order_by_key().equal_to(value).get(self.authkey)
-    #     if isinstance(result, pyrebase.pyrebase.PyreResponse):
-    #         try:
-    #             result = result.val()
-    #             if value in result:
-    #                 result = result[value]
-    #         except:
-    #             try:
-    #                 result = result.each()
-    #             except:
-    #                 return None
-    #     else:
-    #         result = None
-    #     if result == []:
-    #         result = None
-    #     return result
-    #
-    # def complex_find(self, base, ord, value, ord_type='key'):
-    #     result = self.reach(base)
-    #     if isinstance(ord,str):
-    #         ord = ord.replace(',', '/').split("/")
-    #     result = result.order_by_child(ord)
-    #     if ord_type == 'val' or ord_type == 'value':
-    #         result = result.order_by_value()
-    #     else:
-    #         result = result.order_by_key().equal_to(value).get(self.authkey)
-    #     if isinstance(result, pyrebase.pyrebase.PyreResponse):
-    #         try:
-    #             result = result.val()
-    #             if value in result:
-    #                 result=result[value]
-    #         except:
-    #             try:
-    #                 result = result.each()
-    #             except:
-    #                 return None
-    #     else:
-    #         result = None
-    #     if result == []:
-    #         result = None
-    #     return result
-
     def generate_possible_key(self, path):
-        data = self.db.child(path).get(self.token).each()
+        data = self.db.child(path).get(self.token)
         if data == None: return '0'
         key = 0
-        for n in data:
-            if n.val() != None:
-                key += 1
+        for val in data:
+            if val != None:
+                key = key + 1
             else:
                 break
         return str(key)
@@ -119,21 +46,28 @@ class Firebase(object):
         data = self.convert_to_dict(path)
         if data == None: return False
         try:
-            value=str(value)
+            value = str(value)
         except:
-            value=value
+            value = value
         return value in data
 
     def convert_to_dict(self, path):
-        data = self.db.child(path).get(self.token).each()
-        if data == None: return None
-        converted = {}
-        for item in data:
-            key=item.key()
-            try: key=str(key)
-            except:pass
-            converted[key] = item.val()
-        return converted
+        data = self.db.child(path).get(self.token)
+
+        def fix_list_to_dict(curr):
+            return {str(index): curr[index] for index in range(len(curr))}
+
+        def iterate_dicts(curr, func):
+            for key, value in curr.items():
+                if isinstance(value, list):
+                    curr[key] = func(value)
+                if isinstance(value, dict):
+                    iterate_dicts(value, func)
+            return curr
+
+        data = fix_list_to_dict(data) if isinstance(data, list) else data
+        data = iterate_dicts(data, fix_list_to_dict)
+        return data
 
     def print_pyrebase(self, path):
         def pretty(d, indent=0):
