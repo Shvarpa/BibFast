@@ -2,14 +2,6 @@ from common_classes import Project, Citation
 from firebase import Firebase
 import os
 
-def pretty(d, indent=0):
-    for key, value in d.items():
-        print('\t' * indent + str(key))
-        if isinstance(value, dict):
-            pretty(value, indent + 1)
-        else:
-            print('\t' * (indent + 1) + str(value))
-
 
 # ref=Firebase()
 
@@ -99,6 +91,23 @@ def print_projects(ref):
     ref.eprint("projects printed successfully")
 
 
+def password_init(ref):
+    """initializes password in user database
+    :param ref:Firebase
+    """
+    ref.db.child("user").set({"password": "1234"}, ref.token)
+    ref.eprint('password initialized')
+
+
+def set_password(ref, password):
+    """changes password in user database
+    :param ref:Firebase
+    :param password:str
+    """
+    ref.db.child("user").set({'password': password}, ref.token)
+    ref.eprint('password updated')
+
+
 def create_citation(ref, project_id):
     """add citation to database by id
     :param ref:Firebase
@@ -116,23 +125,6 @@ def create_citation(ref, project_id):
     curr_citation = Citation(project_id)
     ref.db.child('citations/{}'.format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} created'.format(citation_id))
-
-
-def password_init(ref):
-    """initializes password in user database
-    :param ref:Firebase
-    """
-    ref.db.child("user").set({"password": "1234"}, ref.token)
-    ref.eprint('password initialized')
-
-
-def set_password(ref, password):
-    """changes password in user database
-    :param ref:Firebase
-    :param password:str
-    """
-    ref.db.child("user").set({'password': password}, ref.token)
-    ref.eprint('password updated')
 
 
 def citation_add_contributor(ref, citation_id, type, name):
@@ -331,27 +323,31 @@ def citation_remove_project(ref, citation_id, project_id):
     ref.eprint('citation #{} updated'.format(citation_id))
 
 
-# def project_get_citations(ref, project_id):
-#     """remove project from citation
-#     :param ref:Firebase
-#     :param project_id:str
-#     """
-#     try:project_id=str(project_id)
-#     except:
-#         ref.eprint("bad project id, unstringable")
-#         return
-#     if not ref.exists('projects', project_id):
-#         ref.eprint("project #{} does'nt exist".format(project_id))
-#         return
-#     data = ref.convert_to_dict('citations','projects','{}:{}'.format(project_id,'active'))
-#     return data
+def project_get_citations(ref, project_id):#####not in cli######################
+    """remove project from citation
+    :param ref:Firebase
+    :param project_id:str
+    """
+    try:project_id=str(project_id)
+    except:
+        ref.eprint("bad project id, unstringable")
+        return
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    data = ref.convert_to_dict('citations','projects','{}:{}'.format(project_id,'active'))
+    return data
 
-def project_export_citations(ref, project_id, style='mla7'):
+def project_export_citations(ref, project_id, style='mla7', filename='export.txt'):
     """remove project from citation
     :param ref:Firebase
     :param citation_id:str
     :param project_id:str
     """
+    if not isinstance(filename, str):
+        filename = 'export.txt'
+    else:
+        filename += '.txt' if filename[-4:] != '.txt' else ''
     try:
         project_id = str(project_id)
     except:
@@ -361,6 +357,9 @@ def project_export_citations(ref, project_id, style='mla7'):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
     data = ref.convert_to_dict('citations', 'projects', '{}:{}'.format(project_id, 'active'))
-    citation_list=[Citation(item) for item in data]
-
-########################################################################################################
+    formatted = [Citation(data[item]).export_easybib(style) for item in data]
+    file=open(filename,'w')
+    for formatted_citation in formatted:
+        file.write(formatted_citation) if formatted_citation else None
+    file.close()
+    os.startfile(filename)

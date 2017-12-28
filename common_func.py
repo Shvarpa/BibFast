@@ -23,7 +23,8 @@ def iterate_dicts(curr, func):
 def dict_get_path(dict_data, path, default=None):
     if isinstance(path, str): path = path.split('/')
     for p in path:
-        dict_data = dict_data.get(p)
-        if dict_data == None:
+        if isinstance(dict_data, dict):
+            dict_data = dict_data.get(p)
+        else:
             return default
     return dict_data

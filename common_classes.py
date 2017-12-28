@@ -3,6 +3,7 @@ from collections import OrderedDict
 import requests
 from common_func import dict_get_path
 
+
 class Project(object):
     fields = {'name': None,
               'status': ['active', 'archived', 'projected']
@@ -119,7 +120,8 @@ class Citation(object):
             try:
                 self.data['data']['contributors'] = [v for k, v in
                                                      self.data['data']['contributors'].items()]
-            except:pass
+            except:
+                pass
         else:
             self.data = {}
             self.data['projects'] = {param: 'active'}
@@ -234,7 +236,7 @@ class Citation(object):
                 break
         return True
 
-    def reformat_easybib(self, style='mla7'):
+    def reformat_easybib(self,style='mla7'):
         if 'type' not in self.data:
             return None
         type = self.data['type']
@@ -242,13 +244,16 @@ class Citation(object):
         reformated_data = {
             'key': "0bacd70c03c401a5b74fb39bcdeec6f4",
             'source': self.data['type'],
-            'style': style,
-            type: dict_get_path(self.data,'data/source',{}),
-            pubtype: dict_get_path(self.data,'data/pubtype',{}),
-            'contributors': dict_get_path(self.data,'data/contributors',[{}]),
+            'style':style,
+            type: dict_get_path(self.data, 'data/source', {}),
+            pubtype: dict_get_path(self.data, 'data/pubtype', {}),
+            'contributors': dict_get_path(self.data, 'data/contributors', [{}]),
         }
         return reformated_data
 
-    def export_easybib(self):
-        test = requests.post('https://api.citation-api.com/rest/cite', json=self.reformat_easybib())
-        print(test.json())
+    def export_easybib(self, style='mla7'):
+        response = requests.post('https://api.citation-api.com/rest/cite', json=self.reformat_easybib(style)).json()
+        try:
+            return response['data']
+        except:
+            return None
