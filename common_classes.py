@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 import requests
-
+from common_func import dict_get_path
 
 class Project(object):
     fields = {'name': None,
@@ -128,16 +128,6 @@ class Citation(object):
     def fromdict(cls, data):
         return cls(data)
 
-    def check_path(self, path):
-        x = self.data
-        if isinstance(path, str):
-            path = path.replace(',', '/').split("/")
-        for p in path:
-            x.get(p, None)
-            if x == None:
-                return False
-        return True
-
     def add_project(self, project_id):
         if isinstance(self.data['projects'], list):
             try:
@@ -253,9 +243,9 @@ class Citation(object):
             'key': "0bacd70c03c401a5b74fb39bcdeec6f4",
             'source': self.data['type'],
             'style': style,
-            type: self.data['data']['source'] if self.check_path(('data', 'source')) else {},
-            pubtype: self.data['data']['pubtype'] if self.check_path(('data', 'source')) else {},
-            'contributors': self.data['data']['contributors'] if self.check_path(('data', 'contributors')) else [{}]
+            type: dict_get_path(self.data,'data/source',{}),
+            pubtype: dict_get_path(self.data,'data/pubtype',{}),
+            'contributors': dict_get_path(self.data,'data/contributors',[{}]),
         }
         return reformated_data
 

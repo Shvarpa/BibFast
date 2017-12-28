@@ -1,6 +1,6 @@
 from common_classes import Project, Citation
 from firebase import Firebase
-
+import os
 
 def pretty(d, indent=0):
     for key, value in d.items():
@@ -9,6 +9,7 @@ def pretty(d, indent=0):
             pretty(value, indent + 1)
         else:
             print('\t' * (indent + 1) + str(value))
+
 
 # ref=Firebase()
 
@@ -29,7 +30,8 @@ def project_status_set(ref, project_id, status):
     :param project_id:int
     :param status:int
     """
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -51,7 +53,8 @@ def delete_project(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -69,7 +72,8 @@ def project_update(ref, project_id, name=None, status=None):
     :param name:str
     :param status:str
     """
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -79,8 +83,8 @@ def project_update(ref, project_id, name=None, status=None):
     data = ref.convert_to_dict("projects/{}".format(project_id))
     current_project = Project.fromdict(data)
     current_project.set_name(name) if name != None else None
-    report=current_project.set_status(status) if status != None else None
-    if isinstance(report,str):
+    report = current_project.set_status(status) if status != None else None
+    if isinstance(report, str):
         ref.eprint('cannot change status ({})'.format(report))
         return
     ref.db.child('projects/{}'.format(project_id)).set(current_project.data, ref.token)
@@ -100,7 +104,8 @@ def create_citation(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -137,7 +142,8 @@ def citation_add_contributor(ref, citation_id, type, name):
     :param type:str
     :param name:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
@@ -160,7 +166,8 @@ def citation_remove_contributor(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
@@ -183,7 +190,8 @@ def citation_set_type(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
@@ -205,7 +213,8 @@ def citation_fill_data(ref, citation_id):
     :param ref:Firebase
     :param citation_id:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
@@ -228,11 +237,13 @@ def citation_add_project(ref, citation_id, project_id):
     :param citation_id:str
     :param project_id:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -262,11 +273,13 @@ def citation_change_project_status(ref, citation_id, project_id, project_status)
     :param project_id:str
     :param project_status:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -292,11 +305,13 @@ def citation_remove_project(ref, citation_id, project_id):
     :param citation_id:str
     :param project_id:str
     """
-    try:citation_id=str(citation_id)
+    try:
+        citation_id = str(citation_id)
     except:
         ref.eprint("bad citation id, unstringable")
         return
-    try:project_id=str(project_id)
+    try:
+        project_id = str(project_id)
     except:
         ref.eprint("bad project id, unstringable")
         return
@@ -314,5 +329,38 @@ def citation_remove_project(ref, citation_id, project_id):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
+
+
+# def project_get_citations(ref, project_id):
+#     """remove project from citation
+#     :param ref:Firebase
+#     :param project_id:str
+#     """
+#     try:project_id=str(project_id)
+#     except:
+#         ref.eprint("bad project id, unstringable")
+#         return
+#     if not ref.exists('projects', project_id):
+#         ref.eprint("project #{} does'nt exist".format(project_id))
+#         return
+#     data = ref.convert_to_dict('citations','projects','{}:{}'.format(project_id,'active'))
+#     return data
+
+def project_export_citations(ref, project_id, style='mla7'):
+    """remove project from citation
+    :param ref:Firebase
+    :param citation_id:str
+    :param project_id:str
+    """
+    try:
+        project_id = str(project_id)
+    except:
+        ref.eprint("bad project id, unstringable")
+        return
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    data = ref.convert_to_dict('citations', 'projects', '{}:{}'.format(project_id, 'active'))
+    citation_list=[Citation(item) for item in data]
 
 ########################################################################################################
