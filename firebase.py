@@ -1,6 +1,6 @@
 import pyrebase
 import requests
-
+from common_func import *
 # DONE change all id's to strings instead of ints
 
 config = {
@@ -53,46 +53,19 @@ class Firebase(object):
     def convert_to_dict(self, path, filter_path=None, filter_item=None):
         data = self.db.child(path).get(self.token)
 
-        def fix_list_to_dict(curr):
-            return {str(index): curr[index] for index in range(len(curr))}
-
-        def iterate_dicts(curr, func):
-            for key, value in curr.items():
-                if isinstance(value, list):
-                    curr[key] = func(value)
-                if isinstance(value, dict):
-                    iterate_dicts(value, func)
-            return curr
-
-        def dict_pather(dict_data, path):
-            if isinstance(path, str): path = path.split('/')
-            for p in path:
-                dict_data = dict_data.get(p)
-                if dict_data == None:
-                    return {}
-            return dict_data
-
         data = fix_list_to_dict(data) if isinstance(data, list) else data
-        data = iterate_dicts(data, fix_list_to_dict)
+        data = iterate_dicts(data, fix_list_to_dict) if data else data
         if isinstance(filter_item, str): filter_item = tuple(None if x == '' else x for x in filter_item.split(':'))
         if filter_path:
             if filter_item[0] and filter_item[1]:
-                data = {k: v for k, v in data.items() if filter_item in dict_pather(data[k], filter_path).items()}
+                data = {k: v for k, v in data.items() if filter_item in dict_get_path(data[k], filter_path,{}).items()}
             elif filter_item[1]:
-                data = {k: v for k, v in data.items() if filter_item[1]==dict_pather(data[k], filter_path).get(filter_item[0])}
+                data = {k: v for k, v in data.items() if filter_item[1]==dict_get_path(data[k], filter_path,{}).get(filter_item[0])}
             elif filter_item[0]:
-                data = {k: v for k, v in data.items() if filter_item[0] in dict_pather(data[k], filter_path)}
+                data = {k: v for k, v in data.items() if filter_item[0] in dict_get_path(data[k], filter_path,{})}
         return data
 
     def print_pyrebase(self, path):
-        def pretty(d, indent=0):
-            for key, value in d.items():
-                print('\t' * indent + str(key))
-                if isinstance(value, dict):
-                    pretty(value, indent + 1)
-                else:
-                    print('\t' * (indent + 1) + str(value))
-
         data = self.convert_to_dict(path)
         try:
             pretty(data)
