@@ -2,7 +2,6 @@ import pyrebase
 import requests
 
 # DONE change all id's to strings instead of ints
-# TODO check if convert fixes string values for sub dictionaries
 
 config = {
     "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
@@ -51,7 +50,7 @@ class Firebase(object):
             value = value
         return value in data
 
-    def convert_to_dict(self, path):
+    def convert_to_dict(self, path, filter_path=None, filter_item=None):
         data = self.db.child(path).get(self.token)
 
         def fix_list_to_dict(curr):
@@ -65,8 +64,24 @@ class Firebase(object):
                     iterate_dicts(value, func)
             return curr
 
+        def dict_pather(dict_data, path):
+            if isinstance(path, str): path = path.split('/')
+            for p in path:
+                dict_data = dict_data.get(p)
+                if dict_data == None:
+                    return {}
+            return dict_data
+
         data = fix_list_to_dict(data) if isinstance(data, list) else data
         data = iterate_dicts(data, fix_list_to_dict)
+        if isinstance(filter_item, str): filter_item = tuple(None if x == '' else x for x in filter_item.split(':'))
+        if filter_path:
+            if filter_item[0] and filter_item[1]:
+                data = {k: v for k, v in data.items() if filter_item in dict_pather(data[k], filter_path).items()}
+            elif filter_item[1]:
+                data = {k: v for k, v in data.items() if filter_item[1]==dict_pather(data[k], filter_path).get(filter_item[0])}
+            elif filter_item[0]:
+                data = {k: v for k, v in data.items() if filter_item[0] in dict_pather(data[k], filter_path)}
         return data
 
     def print_pyrebase(self, path):

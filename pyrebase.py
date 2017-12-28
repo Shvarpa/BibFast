@@ -255,7 +255,6 @@ class Database:
 
     def get(self, token=None, json_kwargs={}):
         build_query = self.build_query
-        query_key = self.path.split("/")[-1]
         request_ref = self.build_request_url(token)
         # headers
         headers = self.build_headers(token)
