@@ -1,4 +1,5 @@
 from common_classes import Project, Citation
+from common_func import filter_dict
 from firebase import Firebase
 import os
 
@@ -30,7 +31,7 @@ def project_status_set(ref, project_id, status):
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict("projects/{}".format(project_id))(ref.token)
+    data = ref.get("projects/{}".format(project_id))(ref.token)
     curr_project = Project.fromdict(data)
     report = curr_project.set_status(status)
     if isinstance(report, str):
@@ -72,7 +73,7 @@ def project_update(ref, project_id, name=None, status=None):
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict("projects/{}".format(project_id))
+    data = ref.get("projects/{}".format(project_id))
     current_project = Project.fromdict(data)
     current_project.set_name(name) if name != None else None
     report = current_project.set_status(status) if status != None else None
@@ -142,7 +143,7 @@ def citation_add_contributor(ref, citation_id, type, name):
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.add_contributor(type, name)
     if isinstance(report, str):
@@ -166,7 +167,7 @@ def citation_remove_contributor(ref, citation_id, type):
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.remove_contributor(type)
     if isinstance(report, str):
@@ -190,7 +191,7 @@ def citation_set_type(ref, citation_id, type):
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.set_type(type)
     if isinstance(report, str):
@@ -213,7 +214,7 @@ def citation_fill_data(ref, citation_id):
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.fill_data()
     if isinstance(report, str):
@@ -248,7 +249,7 @@ def citation_add_project(ref, citation_id, project_id):
     if ref.exists('citations/{}/projects'.format(citation_id), project_id):
         ref.eprint("project #{} allready in citation #{}".format(project_id, citation_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.add_project(project_id)
     if isinstance(report, str):
@@ -281,7 +282,7 @@ def citation_change_project_status(ref, citation_id, project_id, project_status)
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.change_project_status(project_id, project_status)
     if isinstance(report, str):
@@ -313,7 +314,7 @@ def citation_remove_project(ref, citation_id, project_id):
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict('citations/{}'.format(citation_id))
+    data = ref.get('citations/{}'.format(citation_id))
     curr_citation = Citation.fromdict(data)
     report = curr_citation.remove_project(project_id)
     if isinstance(report, str):
@@ -335,7 +336,8 @@ def project_get_citations(ref, project_id):#####not in cli######################
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict('citations','projects','{}:{}'.format(project_id,'active'))
+    data = ref.get('citations')
+    data=filter_dict('projects','{}:{}'.format(project_id,'active'))
     return data
 
 def project_export_citations(ref, project_id, style='mla7', filename='export.txt'):
@@ -356,7 +358,8 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.convert_to_dict('citations', 'projects', '{}:{}'.format(project_id, 'active'))
+    data = ref.get('citations')
+    data=filter_dict(data,'projects', '{}:{}'.format(project_id, 'active'))
     formatted = [Citation(data[item]).export_easybib(style) for item in data]
     file=open(filename,'w')
     for formatted_citation in formatted:
