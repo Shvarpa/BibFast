@@ -1,7 +1,7 @@
 import pyrebase
 import requests
 from common_func import *
-
+import os
 
 class Firebase(object):
     config = {
@@ -28,20 +28,24 @@ class Firebase(object):
                 file = open('.token', 'r')
                 self.token = file.readline()
                 file.close()
+                return
             except:
-                self.token = None
-        if self.token == None:
+                pass
+        try:
+            print("token expired, must login")
+            username = input('Email:')
+            password = input('Password:')  ##getpass.getpass()
+            self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
             try:
-                print("token expired, must login")
-                username = input('Email:')
-                password = input('Password:')  ##getpass.getpass()
-                self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
-                file = open('.token', 'w')
-                file.write(self.token)
-                hide_file('.token')
-                file.close()
-            except requests.exceptions.HTTPError:
-                self.token = None
+                os.remove('.token')
+            except:
+                pass
+            file = open('.token', 'w')
+            file.write(self.token)
+            hide_file('.token')
+            file.close()
+        except requests.exceptions.HTTPError:
+            self.token = None
 
     # def refreash_token(self):
 
