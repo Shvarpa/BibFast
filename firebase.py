@@ -22,7 +22,7 @@ class Firebase(object):
         self.token = None
         self.refresh_token()
 
-    def refresh_token(self,new=False):
+    def refresh_token(self, new=False):
         if not new:
             try:
                 file = open('.token', 'r')
@@ -34,7 +34,7 @@ class Firebase(object):
             try:
                 print("token expired, must login")
                 username = input('Email:')
-                password = input('Password:') ##getpass.getpass()
+                password = input('Password:')  ##getpass.getpass()
                 self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
                 file = open('.token', 'w')
                 file.write(self.token)
@@ -46,24 +46,21 @@ class Firebase(object):
     # def refreash_token(self):
 
     def generate_possible_key(self, path):
-        data=self.get(path)
+        data = self.get(path)
         if data == None: return '0'
         key = 0
-        for val in data:
-            if val != None:
-                key = key + 1
+        while key <= data.__len__():
+            if str(key) not in data or data[str(key)] == None:
+                return str(key)
             else:
-                break
-        return str(key)
+                key += 1
+        return key
 
-    def exists(self, path, value):
+    def exists(self, path, key):
         data = self.get(path)
         if data == None: return False
-        try:
-            value = str(value)
-        except:
-            value = value
-        return value in data
+        key = str(key)
+        return key in data and data[key] != None
 
     def get(self, path):
         while True:

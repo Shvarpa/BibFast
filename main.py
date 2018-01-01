@@ -46,15 +46,15 @@ def delete_project(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    project_id = str(project_id)
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
     ref.db.child('projects/{}'.format(project_id)).remove(ref.token)
+    citations=ref.get('citations')
+    if isinstance(citations,dict):
+        citations=filter_dict(citations,'projects',"{}:".format(project_id),False)
+        ref.db.child("citations").set(citations,ref.token)
     ref.eprint('project #{} removed'.format(project_id))
 
 
@@ -65,11 +65,7 @@ def project_update(ref, project_id, name=None, status=None):
     :param name:str
     :param status:str
     """
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    project_id = str(project_id)
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
@@ -114,11 +110,7 @@ def create_citation(ref, project_id):
     :param ref:Firebase
     :param project_id:str
     """
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    project_id = str(project_id)
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
@@ -135,11 +127,7 @@ def citation_add_contributor(ref, citation_id, type, name):
     :param type:str
     :param name:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
+    citation_id = str(citation_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -159,11 +147,7 @@ def citation_remove_contributor(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
+    citation_id = str(citation_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -183,11 +167,7 @@ def citation_set_type(ref, citation_id, type):
     :param citation_id:str
     :param type:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
+    citation_id = str(citation_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -198,7 +178,7 @@ def citation_set_type(ref, citation_id, type):
         ref.eprint('could not set publication type ({})'.format(report))
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
-    ref.eprint('removed contributor from citation #{}'.format(citation_id))
+    ref.eprint('changed citation #{} type to {}'.format(citation_id,type))
 
 
 def citation_fill_data(ref, citation_id):
@@ -206,11 +186,7 @@ def citation_fill_data(ref, citation_id):
     :param ref:Firebase
     :param citation_id:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
+    citation_id = str(citation_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -230,16 +206,8 @@ def citation_add_project(ref, citation_id, project_id):
     :param citation_id:str
     :param project_id:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    citation_id = str(citation_id)
+    project_id = str(project_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -266,16 +234,8 @@ def citation_change_project_status(ref, citation_id, project_id, project_status)
     :param project_id:str
     :param project_status:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    citation_id = str(citation_id)
+    project_id = str(project_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -298,16 +258,8 @@ def citation_remove_project(ref, citation_id, project_id):
     :param citation_id:str
     :param project_id:str
     """
-    try:
-        citation_id = str(citation_id)
-    except:
-        ref.eprint("bad citation id, unstringable")
-        return
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    citation_id = str(citation_id)
+    project_id = str(project_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
         return
@@ -329,10 +281,7 @@ def project_get_citations(ref, project_id):#####not in cli######################
     :param ref:Firebase
     :param project_id:str
     """
-    try:project_id=str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    project_id=str(project_id)
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
@@ -350,11 +299,7 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
         filename = 'export.txt'
     else:
         filename += '.txt' if filename[-4:] != '.txt' else ''
-    try:
-        project_id = str(project_id)
-    except:
-        ref.eprint("bad project id, unstringable")
-        return
+    project_id = str(project_id)
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return

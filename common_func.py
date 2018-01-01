@@ -23,15 +23,24 @@ def iterate_dicts(curr, func):
     return curr
 
 
-def filter_dict(data, filter_path=None, filter_item=None):
+def filter_dict(data, filter_path=None, filter_item=None,in_or_not=True):
     if isinstance(filter_item, str): filter_item = tuple(None if x == '' else x for x in filter_item.split(':'))
-    if filter_item[0] and filter_item[1]:
-        data = {k: v for k, v in data.items() if filter_item in dict_get_path(data[k], filter_path, {}).items()}
-    elif filter_item[1]:
-        data = {k: v for k, v in data.items() if
-                filter_item[1] == dict_get_path(data[k], filter_path, {}).get(filter_item[0])}
-    elif filter_item[0]:
-        data = {k: v for k, v in data.items() if filter_item[0] in dict_get_path(data[k], filter_path, {})}
+    if in_or_not==True:
+        if filter_item[0] and filter_item[1]:
+            data = {k: v for k, v in data.items() if filter_item in dict_get_path(data[k], filter_path, {}).items()}
+        elif filter_item[1]:
+            data = {k: v for k, v in data.items() if
+                    filter_item[1] == dict_get_path(data[k], filter_path, {}).get(filter_item[0])}
+        elif filter_item[0]:
+            data = {k: v for k, v in data.items() if filter_item[0] in dict_get_path(data[k], filter_path, {})}
+    else:
+        if filter_item[0] and filter_item[1]:
+            data = {k: v for k, v in data.items() if filter_item not in dict_get_path(data[k], filter_path, {}).items()}
+        elif filter_item[1]:
+            data = {k: v for k, v in data.items() if
+                    filter_item[1] != dict_get_path(data[k], filter_path, {}).get(filter_item[0])}
+        elif filter_item[0]:
+            data = {k: v for k, v in data.items() if filter_item[0] not in dict_get_path(data[k], filter_path, {})}
     return data
 
 
@@ -47,5 +56,4 @@ def dict_get_path(data, path, default=None):
 
 def hide_file(filename):
     FILE_ATTRIBUTE_HIDDEN = 0x02
-    ret = ctypes.windll.kernel32.SetFileAttributesW(filename, FILE_ATTRIBUTE_HIDDEN)
-    return ret
+    ctypes.windll.kernel32.SetFileAttributesW(filename, FILE_ATTRIBUTE_HIDDEN)
