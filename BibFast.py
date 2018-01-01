@@ -121,7 +121,6 @@ def citation_change_project_status(Firebase, citation_id, project_id, project_st
     main.citation_change_project_status(Firebase, citation_id, project_id, project_status)
 
 
-
 @cli.command()
 @click.pass_obj
 @click.argument('citation_id', type=str)
@@ -130,14 +129,22 @@ def citation_remove_project(Firebase, citation_id, project_id):
     main.citation_remove_project(Firebase, citation_id, project_id)
 
 
-
 @cli.command()
 @click.pass_obj
 @click.argument('project_id', type=str)
-@click.option('style', type=str)
-@click.option('filename', type=str)
+@click.option('--style', type=str)
+@click.option('--filename', type=str)
 def project_export_citations(Firebase, project_id, style, filename):
     main.project_export_citations(Firebase, project_id, style, filename)
+
+
+@cli.command()
+@click.pass_obj
+@click.argument('request', type=str)
+@click.option('--style', default='popular', type=str)
+@click.option('--limit', default=10, type=int)
+def get_styles(request, limit):
+    main.get_styles(request, limit)
 
 
 cli()

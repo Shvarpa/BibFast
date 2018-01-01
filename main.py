@@ -1,6 +1,7 @@
 from common_classes import Project, Citation
 from common_func import filter_dict
 from firebase import Firebase
+import requests
 import os
 
 
@@ -51,10 +52,10 @@ def delete_project(ref, project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
     ref.db.child('projects/{}'.format(project_id)).remove(ref.token)
-    citations=ref.get('citations')
-    if isinstance(citations,dict):
-        citations=filter_dict(citations,'projects',"{}:".format(project_id),False)
-        ref.db.child("citations").set(citations,ref.token)
+    citations = ref.get('citations')
+    if isinstance(citations, dict):
+        citations = filter_dict(citations, 'projects', "{}:".format(project_id), False)
+        ref.db.child("citations").set(citations, ref.token)
     ref.eprint('project #{} removed'.format(project_id))
 
 
@@ -178,7 +179,7 @@ def citation_set_type(ref, citation_id, type):
         ref.eprint('could not set publication type ({})'.format(report))
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
-    ref.eprint('changed citation #{} type to {}'.format(citation_id,type))
+    ref.eprint('changed citation #{} type to {}'.format(citation_id, type))
 
 
 def citation_fill_data(ref, citation_id):
@@ -276,18 +277,19 @@ def citation_remove_project(ref, citation_id, project_id):
     ref.eprint('citation #{} updated'.format(citation_id))
 
 
-def project_get_citations(ref, project_id):#####not in cli######################
+def project_get_citations(ref, project_id):  #####not in cli######################
     """remove project from citation
     :param ref:Firebase
     :param project_id:str
     """
-    project_id=str(project_id)
+    project_id = str(project_id)
     if not ref.exists('projects', project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
     data = ref.get('citations')
-    data=filter_dict('projects','{}:{}'.format(project_id,'active'))
+    data = filter_dict(data, 'projects', '{}:{}'.format(project_id, 'active'))
     return data
+
 
 def project_export_citations(ref, project_id, style='mla7', filename='export.txt'):
     """remove project from citation
@@ -304,10 +306,24 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
     data = ref.get('citations')
-    data=filter_dict(data,'projects', '{}:{}'.format(project_id, 'active'))
+    data = filter_dict(data, 'projects', '{}:{}'.format(project_id, 'active'))
     formatted = [Citation(data[item]).export_easybib(style) for item in data]
-    file=open(filename,'w')
+    file = open(filename, 'w')
     for formatted_citation in formatted:
         file.write(formatted_citation) if formatted_citation else None
     file.close()
     os.startfile(filename)
+
+
+def get_styles(request='popular',limit=10):
+    if request == 'popular':
+        data = requests.post(url='http://api.citation-api.com/2.1/rest/popular-styles').json()['data']
+        return ''.join("{}, ".format(i) for i in data.keys())
+    elif request=='all':
+        data=requests.post(url='http://api.citation-api.com/2.1/rest/styles').json()['data']
+        if limit:
+            return ''.join("{}, ".format(k) for k in list(data.keys())[0:limit])
+        else:
+            return ''.join("{}, ".format(k) for k in data.keys())
+
+

@@ -131,14 +131,9 @@ class Citation(object):
         return cls(data)
 
     def add_project(self, project_id):
-        if isinstance(self.data['projects'], list):
-            try:
-                self.data['projects'].pop(project_id)
-            except:
-                pass
-            self.data['projects'].insert(project_id, 'active')
-        elif isinstance(self.data['projects'], dict):
-            self.data['projects'][project_id] = 'active'
+        if 'projects' not in self.data:
+            self.data['projects']={}
+        self.data['projects'][project_id] = 'active'
 
     def change_project_status(self, project_id, status):
         print(self.data['projects'])
@@ -146,29 +141,15 @@ class Citation(object):
             return 'bad status'
         if project_id not in self.data['projects']:
             return "has no project with id #{}".format(project_id)
-        if isinstance(self.data['projects'], list):
-            if project_id > len(self.data['projects']):
-                return "has no project with id #{}".format(project_id)
-            try:
-                self.data['projects'].pop(project_id)
-            except:
-                pass
-            self.data['projects'].insert(project_id, status)
-        else:
-            if project_id not in self.data['projects']:
-                return "has no project with id #{}".format(project_id)
-            self.data["projects"][project_id] = status
+        if project_id not in self.data['projects']:
+            return "has no project with id #{}".format(project_id)
+        self.data["projects"][project_id] = status
 
     def remove_project(self, project_id):
-        if isinstance(self.data['projects'], list):
-            if project_id > len(self.data['projects']):
-                return "has no project with id #{}".format(project_id)
-            self.data['projects'].pop(project_id)
-        else:
-            if project_id not in self.data['projects']:
-                return "has no project with id #{}".format(project_id)
-            self.data["projects"].remove(project_id)
-        if self.data['projects'] == {} or self.data['projects'] == []:
+        if project_id not in self.data['projects']:
+            return "has no project with id #{}".format(project_id)
+        self.data["projects"].pop(project_id)
+        if self.data['projects'] == {}:
             self.data = None
 
     def set_type(self, type):
@@ -176,7 +157,7 @@ class Citation(object):
             return "bad type"
         self.data['type'] = type
         pub_type = Citation.fields['get pubtype'][type]
-        if not 'data' in self.data:
+        if 'data' not in self.data:
             self.data['data'] = {}
         self.data['data']['pubtype'] = {key: '' for key, _ in Citation.fields['pubtype'][pub_type].items()}
         self.data['data']['source'] = {key: '' for key, _ in Citation.fields['source'][type].items()}
@@ -236,7 +217,7 @@ class Citation(object):
                 break
         return True
 
-    def reformat_easybib(self,style='mla7'):
+    def reformat_easybib(self, style='mla7'):
         if 'type' not in self.data:
             return None
         type = self.data['type']
@@ -244,8 +225,9 @@ class Citation(object):
         reformated_data = {
             'key': "0bacd70c03c401a5b74fb39bcdeec6f4",
             'source': self.data['type'],
-            'style':style,
+            'style': style,
             type: dict_get_path(self.data, 'data/source', {}),
+            'pubtype': {'main': pubtype},
             pubtype: dict_get_path(self.data, 'data/pubtype', {}),
             'contributors': dict_get_path(self.data, 'data/contributors', [{}]),
         }
