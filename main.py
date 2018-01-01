@@ -310,7 +310,7 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
     formatted = [Citation(data[item]).export_easybib(style) for item in data]
     file = open(filename, 'w')
     for formatted_citation in formatted:
-        file.write(formatted_citation) if formatted_citation else None
+        file.write(formatted_citation+'\n\n') if formatted_citation else None
     file.close()
     os.startfile(filename)
 

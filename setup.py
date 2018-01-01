@@ -1,4 +1,4 @@
-from setuptools import setup,find_packages
+from setuptools import setup, find_packages
 
 setup(
     name='BibFast',
@@ -15,5 +15,10 @@ setup(
                       'requests_toolbelt==0.7.0',
                       'python_jwt==2.0.1',
                       'pycryptodome==3.4.3'
-                      ]
+                      ],
+    entry_points='''
+    [console_scripts]
+    bib=BibFast:cli
+    ''',
+
 )

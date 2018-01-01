@@ -1,9 +1,6 @@
 import click
-from common_classes import Project, Citation
 import main
 from firebase import Firebase
-import requests
-import pyrebase
 
 pass_Firebase = click.make_pass_decorator(Firebase, ensure=True)
 
@@ -132,18 +129,17 @@ def citation_remove_project(Firebase, citation_id, project_id):
 @cli.command()
 @click.pass_obj
 @click.argument('project_id', type=str)
-@click.option('--style', type=str)
-@click.option('--filename', type=str)
+@click.option('--style',default='mla7', type=str)
+@click.option('--filename',default='export.txt', type=str)
 def project_export_citations(Firebase, project_id, style, filename):
     main.project_export_citations(Firebase, project_id, style, filename)
 
 
 @cli.command()
 @click.pass_obj
-@click.argument('request', type=str)
-@click.option('--style', default='popular', type=str)
-@click.option('--limit', default=10, type=int)
-def get_styles(request, limit):
+@click.option('--request',default='popular', type=str)
+@click.option('--limit',default=10, type=int)
+def g_styles(request, limit):
     main.get_styles(request, limit)
 
 
