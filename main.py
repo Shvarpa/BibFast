@@ -32,7 +32,7 @@ def project_status_set(ref, project_id, status):
     if not ref.exists("projects", project_id):
         ref.eprint("project #{} does'nt exist".format(project_id))
         return
-    data = ref.get("projects/{}".format(project_id))(ref.token)
+    data = ref.get("projects/{}".format(project_id))
     curr_project = Project.fromdict(data)
     report = curr_project.set_status(status)
     if isinstance(report, str):
