@@ -132,7 +132,7 @@ class Citation(object):
 
     def add_project(self, project_id):
         if 'projects' not in self.data:
-            self.data['projects']={}
+            self.data['projects'] = {}
         self.data['projects'][project_id] = 'active'
 
     def change_project_status(self, project_id, status):
@@ -234,7 +234,12 @@ class Citation(object):
         return reformated_data
 
     def export_easybib(self, style='mla7'):
+
+        print(self.reformat_easybib(style))
+
         response = requests.post('https://api.citation-api.com/rest/cite', json=self.reformat_easybib(style)).json()
+
+        print(response)
         try:
             return response['data']
         except:

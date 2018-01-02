@@ -3,6 +3,7 @@ from common_func import filter_dict
 from firebase import Firebase
 import requests
 import os
+import json
 
 
 # ref=Firebase()
@@ -310,7 +311,8 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
     formatted = [Citation(data[item]).export_easybib(style) for item in data]
     file = open(filename, 'w')
     for formatted_citation in formatted:
-        file.write(formatted_citation+'\n\n') if formatted_citation else None
+        json.dump(formatted_citation,file,ensure_ascii=False)
+        file.write('\n')
     file.close()
     os.startfile(filename)
 
