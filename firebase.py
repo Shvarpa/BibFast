@@ -32,9 +32,14 @@ class Firebase(object):
             except:
                 pass
         try:
-            print("token expired, must login")
-            username = input('Email:')
-            password = input('Password:')  ##getpass.getpass()
+            if 'username' in Firebase.config:
+                username = Firebase.config['username']
+            else:
+                username = input('Email:')
+            if 'password' in Firebase.config:
+                password = Firebase.config['password']
+            else:
+                password = input('Password:')  ##getpass.getpass()
             self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
             try:
                 os.remove('.token')
