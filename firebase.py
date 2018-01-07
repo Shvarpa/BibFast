@@ -13,7 +13,7 @@ class Firebase(object):
         "email": "rand@gmail.com"
     }
 
-    def __init__(self):
+    def __init__(self, gui=False):
         #####verbose
         self.verbose = True
         #####verbose
@@ -22,19 +22,20 @@ class Firebase(object):
         self.auth = self.firebase.auth()
         self.storage = self.firebase.storage()
         self.token = None
-        self.refresh_token_retries()
+        if not gui:
+            self.refresh_token_retries()
 
     def refresh_token_retries(self):
-        retries=3
-        while retries>0:
-            self.refresh_token()
-            if self.token!=None:
+        retries = 3
+        while retries > 0:
+            self.refresh_token(True)
+            if self.token != None:
                 return
-            retries-=1
+            retries -= 1
         print("out of retries, quitting")
         quit()
 
-    def refresh_token(self, new=False):
+    def refresh_token(self, new=False, password=None):
         if not new:
             try:
                 file = open('.token', 'r')
@@ -47,14 +48,15 @@ class Firebase(object):
         else:
             try:
                 if 'email' in Firebase.config:
-                    username = Firebase.config['email']
+                    email = Firebase.config['email']
                 else:
-                    username = input('Email:')
-                if 'password' in Firebase.config:
-                    password = Firebase.config['password']
-                else:
-                    password = input('Password:')  ##getpass.getpass()
-                self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
+                    email = input('Email:')
+                if password == None:
+                    if 'password' in Firebase.config and password == None:
+                        password = Firebase.config['password']
+                    else:
+                        password = input('Password:')  ##getpass.getpass()
+                self.token = self.auth.sign_in_with_email_and_password(email, password)['idToken']
                 self.get('a')
                 try:
                     os.remove('.token')
@@ -101,9 +103,11 @@ class Firebase(object):
         if self.verbose:
             print(*args, **kwargs)
 
-    def change_password(self, password):
-        print('Enter old password')
-        self.refresh_token(new=True)
+    def change_password(self, password,old_pass=None):
+        if old_pass:
+            self.refresh_token(new=True, password=old_pass)
+        else:
+            self.refresh_token_retries()
         try:
             self.auth.delete_user(self.token)
         except:
