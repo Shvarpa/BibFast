@@ -90,26 +90,32 @@ def print_projects(ref):
     ref.eprint("projects printed successfully")
 
 
+def login(ref,password):
+    ref.refresh_token(password=password)
+    if ref.token==None:
+        print('incorrect password')
+
+
 def password_init(ref):
     """initializes password in user database
     :param ref:Firebase
     """
-    password = '123456'
-    report = ref.change_password(password)
-    ref.db.child("user").set({"password": password}, ref.token)
+    new_pass = '123456'
+    ref.change_password(new_pass)
+    ref.db.child("user").set({"password": new_pass}, ref.token)
     ref.eprint('password initialized')
 
 
-def set_password(ref, password):
+def set_password(ref, new_pass):
     """changes password in user database
     :param ref:Firebase
     :param password:str
     """
-    if len(password) < 6:
+    if len(new_pass) < 6:
         ref.eprint('bad password')
         return
-    report = ref.change_password(password)
-    ref.db.child("user").set({'password': password}, ref.token)
+    ref.change_password(new_pass)
+    ref.db.child("user").set({'password': new_pass}, ref.token)
     ref.eprint('password updated')
 
 
