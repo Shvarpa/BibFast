@@ -24,7 +24,8 @@ class Firebase(object):
         self.token = None
         self.refresh_token()
 
-    def refresh_token(self, new=False, tries=3):
+    def refresh_token(self, new=False):
+        tries = 3
         if not new:
             try:
                 file = open('.token', 'r')
@@ -99,6 +100,7 @@ class Firebase(object):
             print(*args, **kwargs)
 
     def change_password(self, password):
+        print('Enter old password')
         self.refresh_token(new=True)
         try:
             self.auth.delete_user(self.token)
