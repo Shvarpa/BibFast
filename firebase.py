@@ -28,7 +28,7 @@ class Firebase(object):
     def refresh_token_retries(self):
         retries = 3
         while retries > 0:
-            self.refresh_token(True)
+            self.refresh_token()
             if self.token != None:
                 return
             retries -= 1
@@ -41,7 +41,7 @@ class Firebase(object):
                 file = open('.token', 'r')
                 self.token = file.readline()
                 file.close()
-                self.get('a')
+                self.auth.get_account_info(self.token)
             except:
                 self.token = None
                 self.refresh_token(new=True)
@@ -57,7 +57,6 @@ class Firebase(object):
                     else:
                         password = input('Password:')  ##getpass.getpass()
                 self.token = self.auth.sign_in_with_email_and_password(email, password)['idToken']
-                self.get('a')
                 try:
                     os.remove('.token')
                 except:
@@ -103,11 +102,8 @@ class Firebase(object):
         if self.verbose:
             print(*args, **kwargs)
 
-    def change_password(self, password,old_pass=None):
-        if old_pass:
-            self.refresh_token(new=True, password=old_pass)
-        else:
-            self.refresh_token_retries()
+    def change_password(self, password):
+        self.refresh_token_retries()
         try:
             self.auth.delete_user(self.token)
         except:

@@ -91,7 +91,7 @@ def print_projects(ref):
 
 
 def login(ref,password):
-    ref.refresh_token(password=password)
+    ref.refresh_token(new=True,password=password)
     if ref.token==None:
         print('incorrect password')
 
