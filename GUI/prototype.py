@@ -50,7 +50,7 @@ class Login(tk.Frame):
         p2.pack(padx=5, side=tk.RIGHT)
 
         button_frame = tk.Frame(self)
-        login = ttk.Button(text='login', command=lambda:self.move_MainMenu(password))
+        login = ttk.Button(text='login', command=lambda:self.move_MainMenu(password.get()))
         login.pack()
 
         status_frame = tk.Label(self)
