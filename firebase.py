@@ -22,19 +22,29 @@ class Firebase(object):
         self.auth = self.firebase.auth()
         self.storage = self.firebase.storage()
         self.token = None
-        self.refresh_token()
+        self.refresh_token_retries()
+
+    def refresh_token_retries(self):
+        retries=3
+        while retries>0:
+            self.refresh_token()
+            if self.token!=None:
+                return
+            retries-=1
+        print("out of retries, quitting")
+        quit()
 
     def refresh_token(self, new=False):
-        tries = 3
         if not new:
             try:
                 file = open('.token', 'r')
                 self.token = file.readline()
                 file.close()
-                return
+                self.get('a')
             except:
-                pass
-        while tries:
+                self.token = None
+                self.refresh_token(new=True)
+        else:
             try:
                 if 'email' in Firebase.config:
                     username = Firebase.config['email']
@@ -45,6 +55,7 @@ class Firebase(object):
                 else:
                     password = input('Password:')  ##getpass.getpass()
                 self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
+                self.get('a')
                 try:
                     os.remove('.token')
                 except:
@@ -53,17 +64,8 @@ class Firebase(object):
                 file.write(self.token)
                 hide_file('.token')
                 file.close()
-            except requests.exceptions.HTTPError:
-                self.token = None
-            try:
-                self.get('a')
-                return True
             except:
-                tries -= 1
-        self.eprint('out of tries')
-        return False
-
-    # def refreash_token(self):
+                self.token = None
 
     def generate_possible_key(self, path):
         data = self.get(path)
