@@ -96,8 +96,6 @@ def password_init(ref):
     """
     password = '123456'
     report = ref.change_password(password)
-    if report:
-        return
     ref.db.child("user").set({"password": password}, ref.token)
     ref.eprint('password initialized')
 
@@ -109,9 +107,8 @@ def set_password(ref, password):
     """
     if len(password) < 6:
         ref.eprint('bad password')
-    report = ref.change_password(password)
-    if report:
         return
+    report = ref.change_password(password)
     ref.db.child("user").set({'password': password}, ref.token)
     ref.eprint('password updated')
 
