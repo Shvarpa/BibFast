@@ -94,6 +94,7 @@ def login(ref,password):
     ref.refresh_token(new=True,password=password)
     if ref.token==None:
         ref.eprint('incorrect password')
+        return
     ref.eprint('logged in')
 
 
