@@ -94,7 +94,11 @@ def password_init(ref):
     """initializes password in user database
     :param ref:Firebase
     """
-    ref.db.child("user").set({"password": "1234"}, ref.token)
+    password = '123456'
+    report = ref.change_password(password)
+    if report:
+        return
+    ref.db.child("user").set({"password": password}, ref.token)
     ref.eprint('password initialized')
 
 
@@ -103,6 +107,11 @@ def set_password(ref, password):
     :param ref:Firebase
     :param password:str
     """
+    if len(password) < 6:
+        ref.eprint('bad password')
+    report = ref.change_password(password)
+    if report:
+        return
     ref.db.child("user").set({'password': password}, ref.token)
     ref.eprint('password updated')
 
@@ -311,21 +320,19 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
     formatted = [Citation(data[item]).export_easybib(style) for item in data]
     file = open(filename, 'w')
     for formatted_citation in formatted:
-        json.dump(formatted_citation,file,ensure_ascii=False)
+        json.dump(formatted_citation, file, ensure_ascii=False)
         file.write('\n')
     file.close()
     os.startfile(filename)
 
 
-def get_styles(request='popular',limit=10):
+def get_styles(request='popular', limit=10):
     if request == 'popular':
         data = requests.post(url='http://api.citation-api.com/2.1/rest/popular-styles').json()['data']
         return ''.join("{}, ".format(i) for i in data.keys())
-    elif request=='all':
-        data=requests.post(url='http://api.citation-api.com/2.1/rest/styles').json()['data']
+    elif request == 'all':
+        data = requests.post(url='http://api.citation-api.com/2.1/rest/styles').json()['data']
         if limit:
             return ''.join("{}, ".format(k) for k in list(data.keys())[0:limit])
         else:
             return ''.join("{}, ".format(k) for k in data.keys())
-
-

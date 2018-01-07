@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='BibFast',
     version='0.1',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['test']),
     url='https://github.com/Shvarpa/BibFast',
     license='',
     author='Shvarpa',

@@ -3,12 +3,14 @@ import requests
 from common_func import *
 import os
 
+
 class Firebase(object):
     config = {
         "apiKey": "AIzaSyCiCf_FZfbIuNe1pbG2ZRYw35dzFYrkTIU",
         "authDomain": "bibfast-6a6a9.firebaseapp.com",
         "databaseURL": "https://bibfast-6a6a9.firebaseio.com/",
         "storageBucket": "bibfast-6a6a9.appspot.com",
+        "email": "rand@gmail.com"
     }
 
     def __init__(self):
@@ -22,7 +24,7 @@ class Firebase(object):
         self.token = None
         self.refresh_token()
 
-    def refresh_token(self, new=False):
+    def refresh_token(self, new=False, tries=3):
         if not new:
             try:
                 file = open('.token', 'r')
@@ -31,26 +33,34 @@ class Firebase(object):
                 return
             except:
                 pass
-        try:
-            if 'username' in Firebase.config:
-                username = Firebase.config['username']
-            else:
-                username = input('Email:')
-            if 'password' in Firebase.config:
-                password = Firebase.config['password']
-            else:
-                password = input('Password:')  ##getpass.getpass()
-            self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
+        while tries:
             try:
-                os.remove('.token')
+                if 'email' in Firebase.config:
+                    username = Firebase.config['email']
+                else:
+                    username = input('Email:')
+                if 'password' in Firebase.config:
+                    password = Firebase.config['password']
+                else:
+                    password = input('Password:')  ##getpass.getpass()
+                self.token = self.auth.sign_in_with_email_and_password(username, password)['idToken']
+                try:
+                    os.remove('.token')
+                except:
+                    pass
+                file = open('.token', 'w')
+                file.write(self.token)
+                hide_file('.token')
+                file.close()
+            except requests.exceptions.HTTPError:
+                self.token = None
+            try:
+                self.get('a')
+                return True
             except:
-                pass
-            file = open('.token', 'w')
-            file.write(self.token)
-            hide_file('.token')
-            file.close()
-        except requests.exceptions.HTTPError:
-            self.token = None
+                tries -= 1
+        self.eprint('out of tries')
+        return False
 
     # def refreash_token(self):
 
@@ -71,13 +81,8 @@ class Firebase(object):
         key = str(key)
         return key in data and data[key] != None
 
-    def get(self, path):
-        while True:
-            try:
-                data = self.db.child(path).get(self.token)
-                break
-            except:
-                self.refresh_token(new=True)
+    def get(self, path=()):
+        data = self.db.child(path).get(self.token)
         data = fix_list_to_dict(data) if isinstance(data, list) else data
         data = iterate_dicts(data, fix_list_to_dict) if data else data
         return data
@@ -92,3 +97,14 @@ class Firebase(object):
     def eprint(self, *args, **kwargs):
         if self.verbose:
             print(*args, **kwargs)
+
+    def change_password(self, password):
+        self.refresh_token(new=True)
+        try:
+            self.auth.delete_user(self.token)
+        except:
+            pass
+        if 'email' in Firebase.config:
+            self.auth.create_user_with_email_and_password(Firebase.config['email'], password)
+        else:
+            self.auth.create_user_with_email_and_password('rand@gmail.com', password)
