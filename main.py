@@ -4,6 +4,7 @@ from firebase import Firebase
 import requests
 import os
 import json
+import datetime
 
 
 # ref=Firebase()
@@ -17,7 +18,11 @@ def create_project(ref, name):
     project_id = ref.generate_possible_key("projects")
     ref.db.child("projects/{}".format(project_id)).set(Project(name).data, ref.token)
     ref.eprint('project #{} added'.format(project_id))
-
+    #update change
+    update = "Project {} added".format(project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref,t,update)
 
 def project_status_set(ref, project_id, status):
     """change project status by his project id
@@ -41,6 +46,11 @@ def project_status_set(ref, project_id, status):
         return
     ref.db.child('projects/{}'.format(project_id)).set(curr_project.data, ref.token)
     ref.eprint('project #{} updated'.format(project_id))
+    #update change
+    update = "Project {} status changed".format(project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref,t,update)
 
 
 def delete_project(ref, project_id):
@@ -58,7 +68,11 @@ def delete_project(ref, project_id):
         citations = filter_dict(citations, 'projects', "{}:".format(project_id), False)
         ref.db.child("citations").set(citations, ref.token)
     ref.eprint('project #{} removed'.format(project_id))
-
+    #update change
+    update = "Project {} deleted".format(project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 def project_update(ref, project_id, name=None, status=None):
     """update project from database by his project id, name and/or status
@@ -80,6 +94,11 @@ def project_update(ref, project_id, name=None, status=None):
         return
     ref.db.child('projects/{}'.format(project_id)).set(current_project.data, ref.token)
     ref.eprint('project #{} updated'.format(project_id))
+    #update change
+    update = "Project {} updated".format(project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def print_projects(ref):
@@ -119,6 +138,11 @@ def set_password(ref, new_pass):
     ref.change_password(new_pass)
     ref.db.child("user").set({'password': new_pass}, ref.token)
     ref.eprint('password updated')
+    #update change
+    update = "Password changed"
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def create_citation(ref, project_id):
@@ -134,6 +158,11 @@ def create_citation(ref, project_id):
     curr_citation = Citation(project_id)
     ref.db.child('citations/{}'.format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} created'.format(citation_id))
+    #update change
+    update = "citation {} created".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_add_contributor(ref, citation_id, type, name):
@@ -155,6 +184,11 @@ def citation_add_contributor(ref, citation_id, type, name):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('add contributor to citation #{}'.format(citation_id))
+    #update change
+    update = "citation {} updated".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_remove_contributor(ref, citation_id, type):
@@ -175,6 +209,11 @@ def citation_remove_contributor(ref, citation_id, type):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('removed contributor from citation #{}'.format(citation_id))
+    #update change
+    update = "citation {} updated".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_set_type(ref, citation_id, type):
@@ -195,6 +234,11 @@ def citation_set_type(ref, citation_id, type):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('changed citation #{} type to {}'.format(citation_id, type))
+    #update change
+    update = "citation {} updated".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_fill_data(ref, citation_id):
@@ -214,6 +258,11 @@ def citation_fill_data(ref, citation_id):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
+    #update change
+    update = "citation {} updated".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_add_project(ref, citation_id, project_id):
@@ -241,6 +290,11 @@ def citation_add_project(ref, citation_id, project_id):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
+    #update change
+    update = "citation {} added to project {}".format(citation_id,project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_change_project_status(ref, citation_id, project_id, project_status):
@@ -266,6 +320,11 @@ def citation_change_project_status(ref, citation_id, project_id, project_status)
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
+    #update change
+    update = "citation {} updated".format(citation_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def citation_remove_project(ref, citation_id, project_id):
@@ -290,6 +349,11 @@ def citation_remove_project(ref, citation_id, project_id):
         return
     ref.db.child("citations/{}".format(citation_id)).set(curr_citation.data, ref.token)
     ref.eprint('citation #{} updated'.format(citation_id))
+    #update change
+    update = "citation {} removed from project {}".format(citation_id,project_id)
+    ti = datetime.datetime.now()
+    t = str(ti.day)+'-'+str(ti.month)+'-'+str(ti.year)+' '+str(ti.hour)+':'+str(ti.minute)
+    change_update(ref, t, update)
 
 
 def project_get_citations(ref, project_id):  #####not in cli######################
@@ -341,3 +405,11 @@ def get_styles(request='popular', limit=10):
             return ''.join("{}, ".format(k) for k in list(data.keys())[0:limit])
         else:
             return ''.join("{}, ".format(k) for k in data.keys())
+
+def change_update(ref,dt,change):
+    ref.db.child("updates").child(dt).set(change,ref.token)
+
+def print_changes(ref):
+    print('Update list:')
+    ref.print_pyrebase("updates")
+    ref.eprint("update list printed successfully")

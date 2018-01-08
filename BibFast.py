@@ -140,3 +140,8 @@ def project_export_citations(Firebase, project_id, style, filename):
 @click.option('--limit',default=10, type=int)
 def get_styles(req, limit):
     print(main.get_styles(req, limit))
+
+@cli.command()
+@click.pass_obj
+def print_changes(Firebase):
+    main.print_changes(Firebase)
