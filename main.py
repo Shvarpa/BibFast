@@ -14,6 +14,7 @@ def create_project(ref, name):
     :param ref:Firebase
     :param name:str
     """
+
     project_id = ref.generate_possible_key("projects")
     ref.db.child("projects/{}".format(project_id)).set(Project(name).data, ref.token)
     ref.eprint('project #{} added'.format(project_id))
@@ -331,6 +332,7 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
     os.startfile(filename)
 
 
+
 def get_styles(request='popular', limit=10):
     if request == 'popular':
         data = requests.post(url='http://api.citation-api.com/2.1/rest/popular-styles').json()['data']
@@ -341,3 +343,36 @@ def get_styles(request='popular', limit=10):
             return ''.join("{}, ".format(k) for k in list(data.keys())[0:limit])
         else:
             return ''.join("{}, ".format(k) for k in data.keys())
+
+
+
+def project_export_citations_each_style(ref, project_id, filename='export.txt'):
+    """remove project from citation
+    :param ref:Firebase
+    :param citation_id:str
+    :param project_id:str
+    """
+    dstyle='mla7'
+    if not isinstance(filename, str):
+        filename = 'export.txt'
+    else:
+        filename += '.txt' if filename[-4:] != '.txt' else ''
+    project_id = str(project_id)
+    if not ref.exists('projects', project_id):
+        ref.eprint("project #{} does'nt exist".format(project_id))
+        return
+    data = ref.get('citations')
+    data = filter_dict(data, 'projects', '{}:{}'.format(project_id, 'active'))
+    citations = [Citation(data[item]) for item in data]
+    formatted=[]
+    index = 0
+    for cit in citations:
+        formatted_cit=cit.export_easybib(input("enter citation #{} style: ".format(index)))
+        formatted.append(formatted_cit)
+        index=index+1
+    file = open(filename, 'w')
+    for formatted_citation in formatted:
+        json.dump(formatted_citation, file, ensure_ascii=False)
+        file.write('\n')
+    file.close()
+    os.startfile(filename)

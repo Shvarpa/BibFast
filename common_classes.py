@@ -173,6 +173,7 @@ class Citation(object):
                                         Citation.fields['pubtype'][pub_type].items()}
         self.data['data']['source'] = {key: input("Enter {} ({}):".format(key, info)) for key, info in
                                        Citation.fields['source'][type].items()}
+        self.data['data']['url']=input('Enter url')
 
     @staticmethod
     def create_contributor(function, name):
@@ -234,12 +235,7 @@ class Citation(object):
         return reformated_data
 
     def export_easybib(self, style='mla7'):
-
-        print(self.reformat_easybib(style))
-
         response = requests.post('https://api.citation-api.com/rest/cite', json=self.reformat_easybib(style)).json()
-
-        print(response)
         try:
             return response['data']
         except:
