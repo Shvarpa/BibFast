@@ -173,7 +173,9 @@ class Citation(object):
                                         Citation.fields['pubtype'][pub_type].items()}
         self.data['data']['source'] = {key: input("Enter {} ({}):".format(key, info)) for key, info in
                                        Citation.fields['source'][type].items()}
+        #######yulia addition######
         self.data['data']['url']=input('Enter url')
+        ###########################
 
     @staticmethod
     def create_contributor(function, name):
