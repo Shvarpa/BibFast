@@ -2,12 +2,18 @@ import tkinter as tk
 from tkinter import ttk
 from firebase import Firebase
 import main
+import os
 
 LARGE_FONT = ("Verdana", 12)
 NORMAL_FONT = ("Verdana", 8)
 SMALL_TEXT = ("Verdana", 5)
 
+try:
+    os.remove('.token')
+except:
+    pass
 ref = Firebase(gui=True)
+
 
 
 class App(tk.Tk):
@@ -38,32 +44,35 @@ class Login(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.container = container
 
-        title_frame = tk.Frame(self)
-        l1 = tk.Label(title_frame, text="Login:", font=LARGE_FONT)
+        self.title_frame = tk.Frame(self)
+        l1 = tk.Label(self.title_frame, text="Login:", font=LARGE_FONT)
         l1.pack()
 
-        login_frame = tk.Frame(self)
+        self.login_frame = tk.Frame(self)
         password = tk.StringVar()
-        p1 = tk.Label(login_frame, text='Password:', font=NORMAL_FONT)
-        p2 = tk.Entry(login_frame, textvariable=password, show='*')
-        p1.pack(side=tk.LEFT)
-        p2.pack(padx=5, side=tk.RIGHT)
+        self.p1 = tk.Label(self.login_frame, text='Password:', font=NORMAL_FONT)
+        self.p2 = tk.Entry(self.login_frame, textvariable=password, show='*')
+        self.p1.pack(side=tk.LEFT)
+        self.p2.pack(padx=5, side=tk.RIGHT)
 
-        button_frame = tk.Frame(self)
-        login = ttk.Button(text='login', command=lambda:self.move_MainMenu(password.get()))
-        login.pack()
+        self.button_frame = tk.Frame(self)
+        self.login = ttk.Button(text='login', command=lambda:self.move_MainMenu(password.get()))
+        self.login.pack()
 
-        status_frame = tk.Label(self)
+        self.status_frame = tk.Label(self)
 
-        title_frame.pack(pady=5)
-        login_frame.pack(pady=5)
-        button_frame.pack(pady=2)
-        status_frame.pack(side=tk.BOTTOM, pady=5)
+        self.title_frame.pack(pady=5)
+        self.login_frame.pack(pady=5)
+        self.button_frame.pack(pady=2)
+        self.status_frame.pack(side=tk.BOTTOM, pady=15)
 
     def move_MainMenu(self, password):
         main.login(ref, password)
         if ref.token != None:
             self.container.show_frame(MainMenu)
+        if ref.token==None:
+            self.label=tk.Label(self.status_frame,text="incorrect password")
+            self.label.pack()
 
 
 class MainMenu(tk.Frame):
