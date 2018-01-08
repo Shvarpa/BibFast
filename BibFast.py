@@ -135,8 +135,17 @@ def project_export_citations(Firebase, project_id, style, filename):
     main.project_export_citations(Firebase, project_id, style, filename)
 
 
+
 @cli.command()
 @click.option('--req',default='popular', type=str)
 @click.option('--limit',default=10, type=int)
 def get_styles(req, limit):
     print(main.get_styles(req, limit))
+
+
+@cli.command()
+@click.pass_obj
+@click.argument('project_id', type=str)
+@click.option('--filename',default='export.txt', type=str)
+def project_export_citations_each_style(Firebase, project_id, filename):
+    main.project_export_citations_each_style(Firebase, project_id, filename)
