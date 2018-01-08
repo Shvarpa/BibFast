@@ -77,6 +77,13 @@ def create_citation(Firebase, project_id):
 def citation_add_contributor(Firebase, citation_id, type, name):
     main.citation_add_contributor(Firebase, citation_id, type, name)
 
+@cli.command()
+@click.pass_obj
+@click.argument('citation_id', type=str)
+@click.argument('type', type=str)
+@click.argument('name', type=str)
+def add_contributor(Firebase, type, name):
+    main.add_contributor(Firebase, name)
 
 @cli.command()
 @click.pass_obj
@@ -154,3 +161,4 @@ def project_export_citations_each_style(Firebase, project_id, filename):
 @click.pass_obj
 def print_changes(Firebase):
     main.print_changes(Firebase)
+
