@@ -149,3 +149,8 @@ def get_styles(req, limit):
 @click.option('--filename',default='export.txt', type=str)
 def project_export_citations_each_style(Firebase, project_id, filename):
     main.project_export_citations_each_style(Firebase, project_id, filename)
+
+@cli.command()
+@click.pass_obj
+def print_changes(Firebase):
+    main.print_changes(Firebase)
