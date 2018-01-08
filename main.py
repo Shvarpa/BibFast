@@ -138,6 +138,17 @@ def set_password(ref, new_pass):
     if len(new_pass) < 6:
         ref.eprint('bad password')
         return
+
+    if not isinstance(new_pass,int):
+        ref.eprint('bad password- please enter only numbers! ')
+        return
+    if len(new_pass) < 6:
+        ref.eprint('bad password-too short')
+        return
+    if len(new_pass)> 8:
+        ref.eprint('bad password- too long')
+        return
+
     ref.change_password(new_pass)
     ref.db.child("user").set({'password': new_pass}, ref.token)
     ref.eprint('password updated')
@@ -175,6 +186,9 @@ def citation_add_contributor(ref, citation_id, type, name):
     :param type:str
     :param name:str
     """
+    if not name_check(ref, name):
+        print("contributer not available")
+        return
     citation_id = str(citation_id)
     if not ref.exists('citations', citation_id):
         ref.eprint("citation #{} does'nt exist".format(citation_id))
@@ -193,6 +207,18 @@ def citation_add_contributor(ref, citation_id, type, name):
     t = str(ti.day) + '-' + str(ti.month) + '-' + str(ti.year) + ' ' + str(ti.hour) + ':' + str(ti.minute)
     change_update(ref, t, update)
 
+def add_contributor(ref, name):
+    key=ref.generate_possible_key('authors')
+    ref.db.child('authors').update({key:name},ref.token)
+    ref.eprint("updated new auther #{}".format(key))
+
+
+def name_check(ref,name):
+    authers=ref.get("authors")
+    for item in authers.items():
+        if name == item[1]:
+            return True
+    return False
 
 def citation_remove_contributor(ref, citation_id, type):
     """remove first appearance of contributor of the same type in citation by its id
