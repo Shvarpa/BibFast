@@ -220,9 +220,10 @@ def citation_remove_project(Firebase, citation_id, project_id):
 @click.option('--filename',default='export.txt', type=str)
 def project_export_citations(Firebase, project_id, style, filename):
     """
-    exports all project citations to required format with id #<project_id> from citation with id #<citation_id>
-    command interface:  "bib project_export_citations <project_id>"
-    example:            "bib project_export_citations 1"
+    exports all citations in project with id #<project_id> by required <style>
+    option to choose filename, default is exported.txt
+    command interface:  "bib project_export_citations <project_id> --style <style> --filename <filename>"
+    example:            "bib project_export_citations 1 --style apa --filename haha"
     """
     main.project_export_citations(Firebase, project_id, style, filename)
 
