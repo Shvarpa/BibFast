@@ -3,6 +3,9 @@ this program was written in python 3.4.4
 to install the program run "Install BibFast.bat" or type: "pip install editable . "in cmd opened in administrator mode in the local folder
 
 access point for the cli program is 'bib'
+
+
+
 list of commands are:
 ========================================================================================================================
 create_project(name):
