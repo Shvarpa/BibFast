@@ -27,11 +27,13 @@ class Firebase(object):
 
     def refresh_token_retries(self):
         retries = 3
+        new=False
         while retries > 0:
-            self.refresh_token()
+            self.refresh_token(new=new)
             if self.token != None:
                 return
             retries -= 1
+            new=True
         print("out of retries, quitting")
         quit()
 

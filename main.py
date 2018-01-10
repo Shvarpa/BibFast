@@ -425,16 +425,13 @@ def project_export_citations(ref, project_id, style='mla7', filename='export.txt
 
 
 
-def get_styles(request='popular', limit=10):
+def get_styles(request='popular'):
     if request == 'popular':
         data = requests.post(url='http://api.citation-api.com/2.1/rest/popular-styles').json()['data']
         return ''.join("{}, ".format(i) for i in data.keys())
     elif request == 'all':
         data = requests.post(url='http://api.citation-api.com/2.1/rest/styles').json()['data']
-        if limit:
-            return ''.join("{}, ".format(k) for k in list(data.keys())[0:limit])
-        else:
-            return ''.join("{}, ".format(k) for k in data.keys())
+        return ''.join("{}, ".format(k) for k in data.keys())
 
 
 

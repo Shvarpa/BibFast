@@ -15,6 +15,7 @@ setup(
                       'requests_toolbelt==0.7.0',
                       'python_jwt==2.0.1',
                       'pycryptodome==3.4.3'
+					  'pyrebase'
                       ],
     entry_points='''
     [console_scripts]
